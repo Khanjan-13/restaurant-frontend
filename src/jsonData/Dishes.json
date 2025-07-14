@@ -1,0 +1,158 @@
+[
+    {
+        "id": 1,
+        "name": "Butter Chicken",
+        "type": "Main Course",
+        "price": 250
+    },
+    {
+        "id": 2,
+        "name": "Paneer Tikka",
+        "type": "Paneer Dishes",
+        "price": 200
+    },
+    {
+        "id": 3,
+        "name": "Masala Dosa",
+        "type": "South Indian",
+        "price": 120
+    },
+    {
+        "id": 4,
+        "name": "Samosa",
+        "type": "Starter",
+        "price": 50
+    },
+    {
+        "id": 5,
+        "name": "Rasgulla",
+        "type": "Dessert",
+        "price": 60
+    },
+    {
+        "id": 6,
+        "name": "Biryani",
+        "type": "Main Course",
+        "price": 180
+    },
+    {
+        "id": 7,
+        "name": "Gulab Jamun",
+        "type": "Dessert",
+        "price": 70
+    },
+    {
+        "id": 8,
+        "name": "Lassi",
+        "type": "Beverages",
+        "price": 50
+    },
+    {
+        "id": 9,
+        "name": "Dhokla",
+        "type": "Starter",
+        "price": 80
+    },
+    {
+        "id": 10,
+        "name": "Aloo Gobi",
+        "type": "Main Course",
+        "price": 150
+    },
+    {
+        "id": 11,
+        "name": "Chicken Tikka",
+        "type": "Starter",
+        "price": 220
+    },
+    {
+        "id": 12,
+        "name": "Idli",
+        "type": "South Indian",
+        "price": 100
+    },
+    {
+        "id": 13,
+        "name": "Chole Bhature",
+        "type": "Main Course",
+        "price": 120
+    },
+    {
+        "id": 14,
+        "name": "Palak Paneer",
+        "type": "Paneer Dishes",
+        "price": 190
+    },
+    {
+        "id": 15,
+        "name": "Jalebi",
+        "type": "Dessert",
+        "price": 60
+    },
+    {
+        "id": 16,
+        "name": "Mango Lassi",
+        "type": "Beverages",
+        "price": 60
+    },
+    {
+        "id": 17,
+        "name": "Vada Pav",
+        "type": "Street Food",
+        "price": 40
+    },
+    {
+        "id": 18,
+        "name": "Tandoori Chicken",
+        "type": "Main Course",
+        "price": 300
+    },
+    {
+        "id": 19,
+        "name": "Rasam",
+        "type": "South Indian",
+        "price": 90
+    },
+    {
+        "id": 20,
+        "name": "Gajar Ka Halwa",
+        "type": "Dessert",
+        "price": 100
+    },
+    {
+        "id": 21,
+        "name": "Pani Puri",
+        "type": "Street Food",
+        "price": 30
+    },
+    {
+        "id": 22,
+        "name": "Paneer Butter Masala",
+        "type": "Paneer Dishes",
+        "price": 220
+    },
+    {
+        "id": 23,
+        "name": "Daal Makhani",
+        "type": "Main Course",
+        "price": 200
+    },
+    {
+        "id": 24,
+        "name": "Aloo Tikki",
+        "type": "Starter",
+        "price": 70
+    },
+    {
+        "id": 25,
+        "name": "Filter Coffee",
+        "type": "Beverages",
+        "price": 40
+    },
+    {
+        "id": 26,
+        "name": "Mexican Letto",
+        "type": "Sizzler",
+        "price": 350
+    }
+]
