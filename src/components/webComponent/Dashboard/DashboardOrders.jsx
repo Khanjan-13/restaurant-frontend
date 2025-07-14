@@ -10,16 +10,7 @@ import {
 } from "@/components/ui/table";
 import axios from "axios";
 import toast from "react-hot-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+
 import { NavLink } from "react-router-dom";
 
 function DashboardOrders() {
@@ -27,6 +18,7 @@ function DashboardOrders() {
   const [filteredOrders, setFilteredOrders] = useState([]); // State for filtered orders
   const [error, setError] = useState(""); // State for error message
   const [selectedFilter, setSelectedFilter] = useState(""); // State for filter
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 
   useEffect(() => {
@@ -40,7 +32,7 @@ function DashboardOrders() {
         }
 
         const response = await axios.get(
-          "http://localhost:8000/dashboard/orderFetch",
+          `${BASE_URL}/dashboard/orderFetch`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

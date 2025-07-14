@@ -28,6 +28,7 @@ function DashboardMenuManage() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [updateMenuItem, setupdateMenuItem] = useState({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const updateAvailability = async (id, available) => {
     console.log("Switch clicked:", { id, available }); // Log the click action
@@ -37,7 +38,7 @@ function DashboardMenuManage() {
 
       // Send the request to update item availability
       const response = await axios.put(
-        `http://localhost:8000/dashboard/menu/itemSwitchUpdate/${id}`,
+        `${BASE_URL}/dashboard/menu/itemSwitchUpdate/${id}`,
         { available: !available }, // Send the toggled value
         {
           headers: {
@@ -72,14 +73,11 @@ function DashboardMenuManage() {
       }
 
       try {
-        const response = await axios.get(
-          "http://localhost:8000/dashboard/menu/itemall",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get(`${BASE_URL}/dashboard/menu/itemall`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setMenuItems(response.data);
       } catch (error) {
         console.log("Error fetching menu items: ", error);
@@ -125,7 +123,7 @@ function DashboardMenuManage() {
       }
       // Fetch item details from the server
       const response = await axios.get(
-        `http://localhost:8000/dashboard/menu/item/${id}`,
+        `${BASE_URL}/dashboard/menu/item/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -154,7 +152,7 @@ function DashboardMenuManage() {
         return;
       }
       const response = await axios.put(
-        `http://localhost:8000/dashboard/menu/itemupdate/${updateMenuItem._id}`,
+        `${BASE_URL}/dashboard/menu/itemupdate/${updateMenuItem._id}`,
         updateMenuItem,
         {
           headers: {
@@ -172,7 +170,7 @@ function DashboardMenuManage() {
       const fetchItem = async () => {
         try {
           const response = await axios.get(
-            "http://localhost:8000/dashboard/menu/itemall",
+            `${BASE_URL}/dashboard/menu/itemall`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -204,7 +202,7 @@ function DashboardMenuManage() {
         return;
       }
       const response = await axios.delete(
-        `http://localhost:8000/dashboard/menu/itemdelete/${id}`,
+        `${BASE_URL}/dashboard/menu/itemdelete/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

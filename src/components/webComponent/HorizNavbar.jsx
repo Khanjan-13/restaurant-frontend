@@ -22,6 +22,7 @@ function HorizNavbar() {
   const navigate = useNavigate();
   const [ownerName, setOwnerName] = useState(""); // State to store the owner name
   const [error, setError] = useState(null); // State to handle errors
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     const fetchOwnerName = async () => {
@@ -29,14 +30,11 @@ function HorizNavbar() {
         const token = localStorage.getItem("token"); // Fetch token if required for authentication
 
         // Make the API call to get user data
-        const response = await axios.get(
-          "http://localhost:8000/signup/getUser",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // Include the token in the headers if required
-            },
-          }
-        );
+        const response = await axios.get(`${BASE_URL}/signup/getUser`, {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the headers if required
+          },
+        });
 
         // Extract ownerName from the response and update state
         setOwnerName(response.data.user.ownerName);
@@ -132,8 +130,6 @@ function HorizNavbar() {
           </MenubarMenu>
         </div>
       </Menubar>
-
-     
     </>
   );
 }

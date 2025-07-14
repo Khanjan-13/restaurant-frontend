@@ -43,6 +43,7 @@ function DashboardTable() {
   const [tableName, setTableName] = useState({ tableId: "" });
   const [tables, setTables] = useState([]);
   const [filteredTables, setFilteredTables] = useState([]);
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   //Add Table Dialog box
   const handleTableDialogOpen = () => {
@@ -71,7 +72,7 @@ function DashboardTable() {
     };
     try {
       const response = await axios.post(
-        "http://localhost:8000/home/addtable",
+        `${BASE_URL}/home/addtable`,
         requestData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -99,7 +100,7 @@ function DashboardTable() {
     try {
       // Fetch sections and tables concurrently
       const [sectionsResponse] = await Promise.all([
-        axios.get("http://localhost:8000/dashboard/table/addsection", {
+        axios.get(`${BASE_URL}/dashboard/table/addsection`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -156,7 +157,7 @@ function DashboardTable() {
     try {
       // Send the update request
       const response = await axios.put(
-        `http://localhost:8000/dashboard/table/updateSection/${updateSection._id}`,
+        `${BASE_URL}/dashboard/table/updateSection/${updateSection._id}`,
         { tableSection: updateSection.tableSection }, // Only send necessary data
         {
           headers: {
@@ -202,7 +203,7 @@ function DashboardTable() {
     
       // Step 2: Delete all related tables
       const tablesResponse = await axios.delete(
-        `http://localhost:8000/home/deleteSection/${id}`, // Endpoint for deleting related tables
+        `${BASE_URL}/home/deleteSection/${id}`, // Endpoint for deleting related tables
         { headers: { Authorization: `Bearer ${token}` } }
       );
     
@@ -212,7 +213,7 @@ function DashboardTable() {
     
       // Step 3: Delete the section
       const sectionResponse = await axios.delete(
-        `http://localhost:8000/dashboard/table/deleteSection/${id}`, // Endpoint for deleting the section
+        `${BASE_URL}/dashboard/table/deleteSection/${id}`, // Endpoint for deleting the section
         { headers: { Authorization: `Bearer ${token}` } }
       );
     
@@ -253,7 +254,7 @@ function DashboardTable() {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/dashboard/table/addsection",
+        `${BASE_URL}/dashboard/table/addsection`,
         tableSection,
         {
           headers: {
@@ -302,7 +303,7 @@ function DashboardTable() {
     }
 
     try {
-      const response = await axios.get("http://localhost:8000/home/gettable", {
+      const response = await axios.get(`${BASE_URL}/home/gettable`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -374,7 +375,7 @@ function DashboardTable() {
       }
 
       const response = await axios.put(
-        `http://localhost:8000/home/updatetable/${updateSection._id}`,
+        `${BASE_URL}/home/updatetable/${updateSection._id}`,
         { tableId: updateSection.tableSection }, // Replace `tableSection` with `tableId` if needed
         {
           headers: {
@@ -410,7 +411,7 @@ function DashboardTable() {
     }
 
     try {
-      await axios.delete(`http://localhost:8000/home/deletetable/${tableId}`, {
+      await axios.delete(`${BASE_URL}/home/deletetable/${tableId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

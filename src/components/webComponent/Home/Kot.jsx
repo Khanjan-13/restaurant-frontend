@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 function Kot() {
   const [kotItems, setKotItems] = useState([]);
   const [timers, setTimers] = useState({}); // To store elapsed time for each KOT
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const fetchKotItems = async () => {
     try {
@@ -27,7 +28,7 @@ function Kot() {
         return;
       }
 
-      const response = await axios.get("http://localhost:8000/home/getallkot", {
+      const response = await axios.get(`${BASE_URL}/home/getallkot`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -58,42 +59,41 @@ function Kot() {
     }
   };
 
- const handleDeleteItem = async (tokenNumber) => {
-  try {
-    const token = localStorage.getItem("token");
+  const handleDeleteItem = async (tokenNumber) => {
+    try {
+      const token = localStorage.getItem("token");
 
-    if (!token) {
-      toast.error("Authentication token is missing. Please log in again.");
-      return;
+      if (!token) {
+        toast.error("Authentication token is missing. Please log in again.");
+        return;
+      }
+
+      const response = await axios.delete(`${BASE_URL}/home/deleteKot`, {
+        data: { tokenNumber }, // ✅ Sending tokenNumber to backend
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      toast.success(response.data.message);
+      fetchKotItems();
+
+      // ✅ Remove from kotItems state
+      setKotItems((prevKotItems) => {
+        const updatedKotItems = { ...prevKotItems };
+        delete updatedKotItems[tokenNumber];
+        return updatedKotItems;
+      });
+
+      // ✅ Remove from timers state
+      setTimers((prevTimers) => {
+        const updatedTimers = { ...prevTimers };
+        delete updatedTimers[tokenNumber];
+        return updatedTimers;
+      });
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      toast.error("Error deleting item.");
     }
-
-    const response = await axios.delete("http://localhost:8000/home/deleteKot", {
-      data: { tokenNumber }, // ✅ Sending tokenNumber to backend
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    toast.success(response.data.message);
-    fetchKotItems();
-
-    // ✅ Remove from kotItems state
-    setKotItems((prevKotItems) => {
-      const updatedKotItems = { ...prevKotItems };
-      delete updatedKotItems[tokenNumber];
-      return updatedKotItems;
-    });
-
-    // ✅ Remove from timers state
-    setTimers((prevTimers) => {
-      const updatedTimers = { ...prevTimers };
-      delete updatedTimers[tokenNumber];
-      return updatedTimers;
-    });
-  } catch (error) {
-    console.error("Error deleting item:", error);
-    toast.error("Error deleting item.");
-  }
-};
-
+  };
 
   useEffect(() => {
     fetchKotItems();

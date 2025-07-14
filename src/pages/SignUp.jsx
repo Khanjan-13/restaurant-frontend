@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLeaf} from "@fortawesome/free-solid-svg-icons";
+import { faLeaf } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
 const SignupPage = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const [formData, setFormData] = useState({
     ownerName: "",
@@ -36,7 +37,7 @@ const SignupPage = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:8000/signup/create", {
+      const response = await axios.post(`${BASE_URL}/signup/create`, {
         ownerName: formData.ownerName,
         restaurantName: formData.restaurantName,
         email: formData.email,

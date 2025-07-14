@@ -8,6 +8,7 @@ function Login() {
     password: "",
   });
   const navigate = useNavigate(); // for redirecting to another page after successful login
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -16,10 +17,10 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
       const response = await axios.post(
-        "http://localhost:8000/signup/login", // Ensure this matches your backend route
+        `${BASE_URL}/signup/login`, // Ensure this matches your backend route
         formData,
         {
           headers: {
@@ -27,15 +28,15 @@ function Login() {
           },
         }
       );
-  
+
       // Check if login was successful
       if (response.status === 200) {
         console.log("Login successful:", response.data);
         toast.success("Welcome!");
-  
+
         // Store the token in localStorage
         localStorage.setItem("token", response.data.token);
-  
+
         // Redirect to the dashboard or another page
         navigate("/dashboard"); // Replace '/dashboard' with your desired route
       }
@@ -44,7 +45,8 @@ function Login() {
       if (error.response) {
         // Server responded with an error status
         toast.error(
-          error.response.data.message || "Something went wrong, please try again."
+          error.response.data.message ||
+            "Something went wrong, please try again."
         );
       } else if (error.request) {
         // Request was made but no response received

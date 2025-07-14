@@ -15,6 +15,7 @@ function OrdersBilling({ orderItems, setOrderItems }) {
   const [diningMode, setDiningMode] = useState(tableId ? "DINE IN" : "PICK UP");
   const [tableOrders, setTableOrders] = useState([]);
   const [paymentMode, setPaymentMode] = useState(null); // State to track payment mode
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const printKot = (tokenNumber, kotItems, totalAmount, diningMode) => {
     const printWindow = window.open("", "_blank");
@@ -201,7 +202,7 @@ function OrdersBilling({ orderItems, setOrderItems }) {
 
         if (tableId) {
           const response = await axios.get(
-            `http://localhost:8000/orders/order-status/${tableId}`,
+            `${BASE_URL}/orders/order-status/${tableId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -278,41 +279,37 @@ function OrdersBilling({ orderItems, setOrderItems }) {
     }
   };
 
-const handleDeleteRemove = async (index, isTableOrder = false, itemId) => {
-  try {
-            const token = localStorage.getItem("token");
+  const handleDeleteRemove = async (index, isTableOrder = false, itemId) => {
+    try {
+      const token = localStorage.getItem("token");
 
-    // 1️⃣ Call the deleteSingleKot API first
-    const response = await axios.delete(
-      "http://localhost:8000/home/deleteSingleKot",
-      {
+      // 1️⃣ Call the deleteSingleKot API first
+      const response = await axios.delete(`${BASE_URL}/home/deleteSingleKot`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
         data: {
           itemId, // send the _id of the item to delete
         },
+      });
+
+      console.log("Delete API response:", response.data);
+
+      // 2️⃣ Now update state (remove from UI)
+      if (isTableOrder) {
+        const updatedTableOrders = [...tableOrders];
+        updatedTableOrders.splice(index, 1);
+        setTableOrders(updatedTableOrders);
+      } else {
+        const updatedOrderItems = [...orderItems];
+        updatedOrderItems.splice(index, 1);
+        setOrderItems(updatedOrderItems);
       }
-    );
-
-    console.log("Delete API response:", response.data);
-
-    // 2️⃣ Now update state (remove from UI)
-    if (isTableOrder) {
-      const updatedTableOrders = [...tableOrders];
-      updatedTableOrders.splice(index, 1);
-      setTableOrders(updatedTableOrders);
-    } else {
-      const updatedOrderItems = [...orderItems];
-      updatedOrderItems.splice(index, 1);
-      setOrderItems(updatedOrderItems);
+    } catch (error) {
+      console.error("Error deleting KOT item:", error);
+      alert("Failed to delete item. Please try again.");
     }
-  } catch (error) {
-    console.error("Error deleting KOT item:", error);
-    alert("Failed to delete item. Please try again.");
-  }
-};
-
+  };
 
   const handleQuantityChange = (index, value, isTableOrder = false) => {
     const quantity = Math.max(1, Number(value));
@@ -357,14 +354,11 @@ const handleDeleteRemove = async (index, isTableOrder = false, itemId) => {
       }
 
       // Fetch the latest token number from the backend
-      const response = await axios.get(
-        "http://localhost:8000/home/getLatestKot",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.get(`${BASE_URL}/home/getLatestKot`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       // Extract the latest token number, default to 0 if no tokens exist
       const latestToken = response.data?.latestToken ?? 0;
@@ -382,7 +376,7 @@ const handleDeleteRemove = async (index, isTableOrder = false, itemId) => {
 
       // Submit the KOT with the incremented token number
       await axios.post(
-        "http://localhost:8000/home/kot",
+        `${BASE_URL}/home/kot`,
         {
           tokenNumber: newTokenNumber,
           items: kotItems,
@@ -427,7 +421,7 @@ const handleDeleteRemove = async (index, isTableOrder = false, itemId) => {
       const pickupTableNumber = "PICK UP";
 
       // Step 3: Fetch order items from the KOT API
-      const kotApiUrl = `http://localhost:8000/home/getKotByTableNumber/${
+      const kotApiUrl = `${BASE_URL}/home/getKotByTableNumber/${
         tableId ?? pickupTableNumber
       }`;
       const kotResponse = await axios.get(kotApiUrl, {
@@ -473,13 +467,13 @@ const handleDeleteRemove = async (index, isTableOrder = false, itemId) => {
       };
 
       // Step 6: Submit the order
-      const orderSaveUrl = "http://localhost:8000/dashboard/orderSave";
+      const orderSaveUrl = `${BASE_URL}/dashboard/orderSave`;
       await axios.post(orderSaveUrl, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       // Step 7: Update the table's order status
-      const updateKotUrl = "http://localhost:8000/home/updateKot";
+      const updateKotUrl = `${BASE_URL}/home/updateKot`;
       await axios.put(
         updateKotUrl,
         { tableNumber: payload.tableNumber, orderStatus: false },
@@ -489,7 +483,7 @@ const handleDeleteRemove = async (index, isTableOrder = false, itemId) => {
       );
 
       // Step 8: Delete the KOT record
-      const deleteKotUrl = "http://localhost:8000/home/deleteKot";
+      const deleteKotUrl = `${BASE_URL}/home/deleteKot`;
       await axios.delete(deleteKotUrl, {
         data: { tableNumber: payload.tableNumber },
         headers: { Authorization: `Bearer ${token}` },

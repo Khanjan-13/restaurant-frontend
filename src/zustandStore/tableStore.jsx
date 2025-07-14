@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import axios from "axios";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export const useTableStore = create((set) => ({
   tables: [],
   groupedTables: {},
@@ -11,8 +12,8 @@ export const useTableStore = create((set) => ({
       const headers = { Authorization: `Bearer ${token}` };
 
       const [tableResponse, orderResponse] = await Promise.all([
-        axios.get("http://localhost:8000/home/gettable", { headers }),
-        axios.get("http://localhost:8000/home/getallkot", { headers }),
+        axios.get(`${BASE_URL}/home/gettable`, { headers }),
+        axios.get(`${BASE_URL}/home/getallkot`, { headers }),
       ]);
 
       const tables = tableResponse.data.map((table) => {

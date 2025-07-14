@@ -12,6 +12,7 @@ function Orders() {
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showBillingMobile, setShowBillingMobile] = useState(false); // Toggle for mobile
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     const fetchCategory = async () => {
@@ -23,7 +24,7 @@ function Orders() {
         }
 
         const response = await axios.get(
-          "http://localhost:8000/dashboard/menu/itemall",
+          `${BASE_URL}/dashboard/menu/itemall`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -35,6 +35,7 @@ function DashboardMenu() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [menuItems, setMenuItems] = useState({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const inputHandler = (e) => {
     const { name, value } = e.target;
@@ -69,7 +70,7 @@ function DashboardMenu() {
 
       // Send the POST request to add the category
       const response = await axios.post(
-        "http://localhost:8000/dashboard/menu/category",
+        `${BASE_URL}/dashboard/menu/category`,
         category,
         {
           headers: {
@@ -127,7 +128,7 @@ function DashboardMenu() {
           return;
         }
         const response = await axios.get(
-          "http://localhost:8000/dashboard/menu/category",
+          `${BASE_URL}/dashboard/menu/category`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -161,7 +162,7 @@ function DashboardMenu() {
 
       // Make the API request
       const response = await axios.get(
-        `http://localhost:8000/dashboard/menu/category/${id}`,
+        `${BASE_URL}/dashboard/menu/category/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -192,7 +193,7 @@ function DashboardMenu() {
       }
 
       const response = await axios.put(
-        `http://localhost:8000/dashboard/menu/category/${updateCategory._id}`,
+        `${BASE_URL}/dashboard/menu/category/${updateCategory._id}`,
         updateCategory,
         {
           headers: {
@@ -224,7 +225,7 @@ function DashboardMenu() {
         return;
       }
       const response = await axios.delete(
-        `http://localhost:8000/dashboard/menu/category/${categoryId}`,
+        `${BASE_URL}/dashboard/menu/category/${categoryId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -256,7 +257,7 @@ function DashboardMenu() {
         return;
       }
       const response = await axios.get(
-        "http://localhost:8000/dashboard/menu/category",
+      `${BASE_URL}/dashboard/menu/category`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -347,7 +348,7 @@ function DashboardMenu() {
         return;
       }
       const response = await axios.post(
-        "http://localhost:8000/dashboard/menu/item",
+        `${BASE_URL}/dashboard/menu/item`,
         payload,
         {
           headers: {

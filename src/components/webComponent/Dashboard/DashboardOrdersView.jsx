@@ -13,6 +13,8 @@ import axios from "axios";
 function DashboardOrdersView() {
   const { id } = useParams(); // Retrieve the order ID from the route
   const [order, setOrder] = useState(null); // State to store the order details
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   console.log("Order ID:", id);
 
   useEffect(() => {
@@ -26,7 +28,7 @@ function DashboardOrdersView() {
         }
 
         const response = await axios.get(
-          `http://localhost:8000/dashboard/orderFetchById/${orderId}`,
+          `${BASE_URL}/dashboard/orderFetchById/${orderId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
