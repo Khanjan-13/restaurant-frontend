@@ -8,6 +8,7 @@ import { toast } from "react-hot-toast"; // Make sure you have react-hot-toast i
 
 function LoginStaff() {
   const [formData, setFormData] = useState({ email: "", password: "" });
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -19,7 +20,7 @@ function LoginStaff() {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/dashboard/staff/login", // Replace with actual backend route
+        `${BASE_URL}/dashboard/staff/login`, // Replace with actual backend route
         formData,
         {
           headers: {

@@ -10,7 +10,7 @@ function MenuStaff() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:8000/dashboard/menu/itemall", {
+      .get(`${BASE_URL}/dashboard/menu/itemall`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

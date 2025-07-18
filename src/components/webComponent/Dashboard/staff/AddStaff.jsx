@@ -31,6 +31,8 @@ function AddStaff() {
   // For dialog & deletion
   const [openDialog, setOpenDialog] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const handleChange = (e) => {
     setStaffData({ ...staffData, [e.target.name]: e.target.value });
   };
@@ -38,7 +40,7 @@ function AddStaff() {
 
   const fetchStaff = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/dashboard/staff", {
+      const res = await axios.get(`${BASE_URL}/dashboard/staff`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -53,7 +55,7 @@ function AddStaff() {
   const addStaff = async () => {
     try {
       await axios.post(
-        "http://localhost:8000/dashboard/staff/register",
+        `${BASE_URL}/dashboard/staff/register`,
         staffData,
         {
           headers: {
@@ -74,7 +76,7 @@ function AddStaff() {
 
   const deleteStaff = async (id) => {
     try {
-      await axios.delete(`http://localhost:8000/dashboard/staff/${id}`);
+      await axios.delete(`${BASE_URL}/dashboard/staff/${id}`);
       fetchStaff();
       setOpenDialog(false);
     } catch (error) {
