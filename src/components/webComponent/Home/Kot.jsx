@@ -18,7 +18,7 @@ function Kot() {
   const [kotItems, setKotItems] = useState([]);
   const [timers, setTimers] = useState({}); // To store elapsed time for each KOT
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  
+
   const fetchKotItems = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -130,49 +130,54 @@ function Kot() {
     <div className="pt-12 flex flex-1 flex-col">
       <KotNavbar />
       <div className="grid md:grid-cols-3 sm:grid-cols-2 gap-5 p-5 ml-32">
-        {Object.entries(kotItems).map(([tokenNumber, items]) => (
-          <Card key={tokenNumber}>
-            <CardHeader className="bg-[#4caf50] flex flex-col">
-              <CardTitle className="text-white">
-                {items[0]?.tableNumber === "PICK UP"
-                  ? "PICK UP"
-                  : `Table No. ${items[0]?.tableNumber}`}
-              </CardTitle>
-              <CardTitle className="text-white flex justify-between items-center">
-                {formatTime(timers[tokenNumber] || 0)}
-                <button
-                  className="text-red-500 rounded transition duration-200 ease-in-out"
-                  onClick={() => handleDeleteItem(tokenNumber)} // ✅ Pass tokenNumber
-                >
-                  <FontAwesomeIcon icon={faCircleXmark} className="text-2xl" />
-                </button>
-              </CardTitle>
-            </CardHeader>
+        {Object.entries(kotItems)
+          .filter(([_, items]) => items.some((item) => item.isKot)) // ✅ only keep groups with isKot=true
+          .map(([tokenNumber, items]) => (
+            <Card key={tokenNumber}>
+              <CardHeader className="bg-[#4caf50] flex flex-col">
+                <CardTitle className="text-white">
+                  {items[0]?.tableNumber === "PICK UP"
+                    ? "PICK UP"
+                    : `Table No. ${items[0]?.tableNumber}`}
+                </CardTitle>
+                <CardTitle className="text-white flex justify-between items-center">
+                  {formatTime(timers[tokenNumber] || 0)}
+                  <button
+                    className="text-red-500 rounded transition duration-200 ease-in-out"
+                    onClick={() => handleDeleteItem(tokenNumber)}
+                  >
+                    <FontAwesomeIcon icon={faCircleXmark} className="text-2xl" />
+                  </button>
+                </CardTitle>
+              </CardHeader>
 
-            <div className="bg-[#ededed]">
-              <CardDescription className="font-medium">
-                Token No. {tokenNumber}
-              </CardDescription>
-            </div>
-
-            <CardContent>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Items</span>
-                <span className="text-gray-500">Qty</span>
+              <div className="bg-[#ededed]">
+                <CardDescription className="font-medium">
+                  Token No. {tokenNumber}
+                </CardDescription>
               </div>
-              <Separator />
-              {items.map((item, index) => (
-                <div key={index}>
-                  <div className="flex justify-between">
-                    <span className="font-medium">{item.itemName}</span>
-                    <span className="font-medium">{item.itemQuantity}</span>
-                  </div>
-                  <Separator />
+
+              <CardContent>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Items</span>
+                  <span className="text-gray-500">Qty</span>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
+                <Separator />
+                {items
+                  .filter((item) => item.isKot) // ✅ only show items with isKot=true
+                  .map((item, index) => (
+                    <div key={index}>
+                      <div className="flex justify-between">
+                        <span className="font-medium">{item.itemName}</span>
+                        <span className="font-medium">{item.itemQuantity}</span>
+                      </div>
+                      <Separator />
+                    </div>
+                  ))}
+              </CardContent>
+            </Card>
+          ))}
+
       </div>
     </div>
   );
