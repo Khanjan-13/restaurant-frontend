@@ -4,9 +4,9 @@ import React from 'react'
 
 function Home() {
   return (
-    <div className="pt-12 flex flex-1 flex-col ">
-     <HomeNavbar />
-     <TableSection />
+    <div className="min-h-screen bg-background pt-16 md:pt-16">
+      <HomeNavbar />
+      <TableSection />
     </div>
   )
 }

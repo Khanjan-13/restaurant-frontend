@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHourglass2,
   faPlus,
   faCircle,
   faCodeFork,
+  faUtensils,
+  faTruck,
+  faShoppingBag,
+  faClock,
 } from "@fortawesome/free-solid-svg-icons";
 import { NavLink } from "react-router-dom";
 import {
@@ -21,52 +27,135 @@ import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
 
 function HomeNavbar() {
+  const [kotCount, setKotCount] = useState(0);
+
+  // Mock KOT count - in real app this would come from API
+  useEffect(() => {
+    setKotCount(Math.floor(Math.random() * 5) + 1); // Demo: 1-5 pending orders
+  }, []);
+
+  const orderTypes = [
+    {
+      name: "DINE IN",
+      path: "/",
+      icon: faUtensils,
+      image: "Home/dinein.png",
+      description: "Table service",
+      color: "bg-blue-50 text-blue-700 border-blue-200",
+      activeColor: "bg-blue-600 text-white"
+    },
+    {
+      name: "PICK UP",
+      path: "/pickup",
+      icon: faShoppingBag,
+      image: "Home/parcel.png", 
+      description: "Customer pickup",
+      color: "bg-green-50 text-green-700 border-green-200",
+      activeColor: "bg-green-600 text-white"
+    },
+    {
+      name: "DELIVERY",
+      path: "/delivery",
+      icon: faTruck,
+      image: "Home/delivery.png",
+      description: "Home delivery",
+      color: "bg-orange-50 text-orange-700 border-orange-200", 
+      activeColor: "bg-orange-600 text-white"
+    }
+  ];
+
   return (
-    <div>
-      <div className=" flex justify-between items-center gap-2 ">
-        <div className="flex items-center ml-5 gap-3">
-          <NavLink to="/"
-            className={({ isActive }) =>
-              `flex flex-col justify-center items-center  text-[#333] p-2 px-4 ${
-                isActive
-                  ? "border-b-4  font-medium border-[#4caf50] text-[#4caf50] bg-gray-100"
-                  : "hover:text-[#4caf50] hover:border-b-2 border-[#4caf50] "
-              }`
-            }
-          >
-            <img src="Home/dinein.png" className="w-10 h-10" /> DINE IN
-          </NavLink>
-          <NavLink to="/pickup"
-            className={({ isActive }) =>
-              `flex flex-col justify-center items-center  text-[#333] p-2 ${
-                isActive
-                  ? "border-b-2 rounded-none font-medium border-[#4caf50] text-[#4caf50] "
-                  : "hover:text-[#4caf50] hover:border-b-2 border-[#4caf50] "
-              }`
-            }
-          >
-            <img src="Home/parcel.png" className="w-10 h-10" /> PICK UP
-          </NavLink>
-          <NavLink to="/delivery"
-            className={({ isActive }) =>
-              `flex flex-col justify-center items-center text-[#333] p-2 ${
-                isActive
-                  ? "border-b-2 rounded-none font-medium border-[#4caf50] text-[#4caf50] "
-                  : "hover:text-[#4caf50] hover:border-b-2 border-[#4caf50] "
-              }`
-            }
-          >
-            <img src="Home/delivery.png" className="w-10 h-10" /> DELIVERY
-          </NavLink>
+    <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex items-center justify-between px-6 py-4">
+        {/* Order Type Navigation */}
+        <div className="flex items-center gap-2">
+          {orderTypes.map((type) => (
+            <NavLink
+              key={type.name}
+              to={type.path}
+              className={({ isActive }) =>
+                `group relative flex flex-col items-center gap-2 rounded-xl px-6 py-4 text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                  isActive
+                    ? `${type.activeColor} shadow-lg transform scale-105`
+                    : `${type.color} border hover:shadow-md`
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="relative">
+                      <img 
+                        src={type.image} 
+                        alt={type.name}
+                        className={`w-8 h-8 transition-all duration-200 ${
+                          isActive ? 'brightness-0 invert' : ''
+                        }`}
+                      />
+                    </div>
+                    <span className="font-semibold">{type.name}</span>
+                    {!isActive && (
+                      <span className="text-xs opacity-75">{type.description}</span>
+                    )}
+                  </div>
+                  
+                  {/* Active indicator */}
+                  {isActive && (
+                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-current rounded-full" />
+                  )}
+                </>
+              )}
+            </NavLink>
+          ))}
         </div>
-        <div className="flex gap-2 mr-3">
-          <NavLink
-            to="/kot"
-            className="text-white p-2 rounded-md font-medium bg-[#4caf50] hover:bg-[#419844]"
-          >
-            <FontAwesomeIcon icon={faHourglass2} className="h-4 w-4 mr-1" />
-            KOT
+
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          {/* KOT Button */}
+          <NavLink to="/kot">
+            <Button className="relative gap-2 bg-primary hover:bg-primary/90 shadow-md">
+              <FontAwesomeIcon icon={faClock} className="h-4 w-4" />
+              <span className="font-medium">Kitchen Orders</span>
+              {kotCount > 0 && (
+                <Badge 
+                  variant="secondary" 
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center bg-red-500 text-white text-xs border-2 border-background"
+                >
+                  {kotCount}
+                </Badge>
+              )}
+            </Button>
           </NavLink>
+
+          {/* Additional Actions - could be added later */}
+          <Button variant="outline" size="sm" className="gap-2">
+            <FontAwesomeIcon icon={faPlus} className="h-4 w-4" />
+            <span className="hidden sm:inline">Quick Add</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Optional: Order Type Info Bar (can be shown conditionally) */}
+      <div className="px-6 py-2 bg-muted/20 border-t">
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-4">
+            <span className="text-muted-foreground">Active Service:</span>
+            <div className="flex items-center gap-1">
+              <FontAwesomeIcon icon={faUtensils} className="h-3 w-3 text-primary" />
+              <span className="font-medium">Dine In Service</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Available Tables</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+              <span>Occupied Tables</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
