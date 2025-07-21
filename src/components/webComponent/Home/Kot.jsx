@@ -18,7 +18,7 @@ function Kot() {
   const [kotItems, setKotItems] = useState([]);
   const [timers, setTimers] = useState({}); // To store elapsed time for each KOT
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
+  
   const fetchKotItems = async () => {
     try {
       const token = localStorage.getItem("token");
