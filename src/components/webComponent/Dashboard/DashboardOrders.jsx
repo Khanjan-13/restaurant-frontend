@@ -38,7 +38,7 @@ function DashboardOrders() {
   const [selectedFilter, setSelectedFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [dateRange, setDateRange] = useState("today");
+  const [dateRange, setDateRange] = useState("all");
   
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -112,6 +112,7 @@ function DashboardOrders() {
       });
 
       if (response.data) {
+        console.log("Fetched orders:", response.data.length, response.data);
         setOrders(response.data);
         setFilteredOrders(response.data);
       } else {
@@ -129,12 +130,15 @@ function DashboardOrders() {
 
   const filterOrders = () => {
     let filtered = [...orders];
+    console.log("Initial orders count:", orders.length);
+    console.log("Date range filter:", dateRange);
 
     // Filter by payment method
     if (selectedFilter) {
       filtered = filtered.filter(
         (order) => order.paymentMethod?.toLowerCase() === selectedFilter.toLowerCase()
       );
+      console.log("After payment filter:", filtered.length);
     }
 
     // Filter by search query (customer name, phone, or order number)
@@ -145,18 +149,21 @@ function DashboardOrders() {
           order.customerPhone?.includes(searchQuery) ||
           order.tokenNumber?.toString().includes(searchQuery)
       );
+      console.log("After search filter:", filtered.length);
     }
 
     // Filter by date range (simplified for demo)
     if (dateRange !== "all") {
       const today = new Date();
-      const orderDate = new Date();
+      console.log("Today's date:", today.toDateString());
 
       switch (dateRange) {
         case "today":
           filtered = filtered.filter(order => {
             const createdAt = new Date(order.createdAt);
-            return createdAt.toDateString() === today.toDateString();
+            const orderDateString = createdAt.toDateString();
+            console.log("Order date:", orderDateString, "Today:", today.toDateString());
+            return orderDateString === today.toDateString();
           });
           break;
         case "week":
@@ -174,8 +181,10 @@ function DashboardOrders() {
           });
           break;
       }
+      console.log("After date filter:", filtered.length);
     }
 
+    console.log("Final filtered orders:", filtered.length);
     setFilteredOrders(filtered);
   };
 

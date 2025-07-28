@@ -160,7 +160,7 @@ function Kot() {
   // Filter and sort KOT items
   const getFilteredAndSortedItems = () => {
     let filtered = Object.entries(kotItems)
-      .filter(([_, items]) => items.some((item) => item.isKot));
+      .filter(([_, items]) => items.some((item) => item.isKot)); // Show items that ARE KOT (kitchen orders)
 
     // Apply search filter
     if (searchQuery) {

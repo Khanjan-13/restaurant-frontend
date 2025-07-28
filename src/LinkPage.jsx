@@ -20,6 +20,8 @@ import AddStaff from "./components/webComponent/Dashboard/staff/AddStaff";
 import LoginStaff from "./components/webComponent/Dashboard/staff/LoginStaff";
 import MenuStaff from "./components/webComponent/Dashboard/staff/MenuStaff";
 import TableStaff from "./components/webComponent/Dashboard/staff/TableStaff";
+import Attendance from "./components/webComponent/Dashboard/staff/Attendance";
+import Salary from "./components/webComponent/Dashboard/staff/Salary";
 const Format = () => {
   return (
     <div>
@@ -127,6 +129,30 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoutes>
                 <AddStaff />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/staff/attendance",
+            element: (
+              <ProtectedRoutes>
+                <Attendance />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/staff/salary",
+            element: (
+              <ProtectedRoutes>
+                <Salary />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/staff/salary",
+            element: (
+              <ProtectedRoutes>
+                <Salary />
               </ProtectedRoutes>
             ),
           },

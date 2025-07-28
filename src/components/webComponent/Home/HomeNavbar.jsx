@@ -115,7 +115,7 @@ function HomeNavbar() {
           <NavLink to="/kot">
             <Button className="relative gap-2 bg-primary hover:bg-primary/90 shadow-md">
               <FontAwesomeIcon icon={faClock} className="h-4 w-4" />
-              <span className="font-medium">Kitchen Orders</span>
+              <span className="font-medium">ters</span>
               {kotCount > 0 && (
                 <Badge 
                   variant="secondary" 

@@ -55,11 +55,12 @@ function OrdersBilling({ orderItems, setOrderItems }) {
               },
             }
           );
-          setTableOrders(response.data);
+          setTableOrders(Array.isArray(response.data) ? response.data : []);
         }
       } catch (error) {
         console.error("Error fetching table orders:", error);
         toast.error("Failed to fetch table orders");
+        setTableOrders([]); // Ensure it's always an array
       } finally {
         setLoading(false);
       }
@@ -422,7 +423,7 @@ function OrdersBilling({ orderItems, setOrderItems }) {
             )}
 
             {/* Table Orders */}
-            {tableOrders.map((item, index) => (
+            {Array.isArray(tableOrders) && tableOrders.map((item, index) => (
               <div key={`table-order-${index}`} className="p-3 rounded-lg bg-muted/30 border">
                 <div className="grid grid-cols-12 gap-4 items-center">
                   {/* Remove Button */}

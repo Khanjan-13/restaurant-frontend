@@ -167,15 +167,15 @@ function Navbar() {
               
               {(expandedMenus.staff && isExpanded) && (
                 <div className="ml-6 space-y-1">
-                  <NavLink to="/dashboard/staff" className={navLinkClass}>
+                  <NavLink to="/dashboard/staff" end className={navLinkClass}>
                     <FontAwesomeIcon icon={faUserPlus} className="h-4 w-4 shrink-0" />
                     <span>Add Staff</span>
                   </NavLink>
-                  <NavLink to="/attendance" className={navLinkClass}>
+                  <NavLink to="/dashboard/staff/attendance" className={navLinkClass}>
                     <FontAwesomeIcon icon={faPencil} className="h-4 w-4 shrink-0" />
                     <span>Attendance</span>
                   </NavLink>
-                  <NavLink to="/salary" className={navLinkClass}>
+                  <NavLink to="/dashboard/staff/salary" className={navLinkClass}>
                     <FontAwesomeIcon icon={faMoneyBill} className="h-4 w-4 shrink-0" />
                     <span>Salary</span>
                   </NavLink>

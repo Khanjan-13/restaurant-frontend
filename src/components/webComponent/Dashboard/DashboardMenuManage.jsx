@@ -387,8 +387,12 @@ function DashboardMenuManage() {
                         <TableRow key={item._id} className="hover:bg-muted/50 transition-colors">
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                                <FontAwesomeIcon icon={faUtensils} className="h-4 w-4 text-muted-foreground" />
+                            <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center relative">
+                            <FontAwesomeIcon icon={faUtensils} className="h-4 w-4 text-muted-foreground" />
+                            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-medium">
+                                  {index + 1}
+                            </span>
+
                               </div>
                               <div>
                                 <p className="font-medium">{item.name}</p>
