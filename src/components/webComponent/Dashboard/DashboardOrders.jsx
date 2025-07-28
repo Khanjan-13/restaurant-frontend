@@ -276,7 +276,7 @@ function DashboardOrders() {
         <div className="p-6 space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -290,7 +290,7 @@ function DashboardOrders() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -304,7 +304,7 @@ function DashboardOrders() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -318,7 +318,7 @@ function DashboardOrders() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -334,7 +334,7 @@ function DashboardOrders() {
           </div>
 
           {/* Filters and Search */}
-          <Card className="border-0 shadow-sm">
+          <Card className="border shadow-sm">
             <CardContent className="p-6">
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex-1 min-w-[300px]">
@@ -385,7 +385,7 @@ function DashboardOrders() {
           </Card>
 
           {/* Orders Table */}
-          <Card className="border-0 shadow-sm">
+          <Card className="border shadow-sm">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div>

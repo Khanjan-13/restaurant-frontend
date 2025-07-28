@@ -206,7 +206,7 @@ function AddStaff() {
         <div className="p-6 space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -220,7 +220,7 @@ function AddStaff() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -234,7 +234,7 @@ function AddStaff() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -248,7 +248,7 @@ function AddStaff() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -264,7 +264,7 @@ function AddStaff() {
           </div>
 
           {/* Add Staff Form */}
-          <Card className="border-0 shadow-sm">
+          <Card className="border shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <FontAwesomeIcon icon={faUserPlus} className="h-5 w-5 text-primary" />
@@ -358,7 +358,7 @@ function AddStaff() {
           </Card>
 
           {/* Staff List */}
-          <Card className="border-0 shadow-sm">
+          <Card className="border shadow-sm">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div>

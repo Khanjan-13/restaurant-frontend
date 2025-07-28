@@ -325,7 +325,7 @@ function DashboardTable() {
         <div className="p-6 space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -339,7 +339,7 @@ function DashboardTable() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -353,7 +353,7 @@ function DashboardTable() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -367,7 +367,7 @@ function DashboardTable() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -383,7 +383,7 @@ function DashboardTable() {
           </div>
 
           {/* Add Section Form */}
-          <Card className="border-0 shadow-sm">
+          <Card className="border shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg">Add New Section</CardTitle>
               <CardDescription>
@@ -416,7 +416,7 @@ function DashboardTable() {
           </Card>
 
           {/* Sections Management */}
-          <Card className="border-0 shadow-sm">
+          <Card className="border shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg">Manage Sections</CardTitle>
               <CardDescription>View and manage all dining sections</CardDescription>
@@ -489,7 +489,7 @@ function DashboardTable() {
           </Card>
 
           {/* Tables Management */}
-          <Card className="border-0 shadow-sm">
+          <Card className="border shadow-sm">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div>

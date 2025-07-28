@@ -165,7 +165,7 @@ function DashboardHome() {
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
-              <Card key={index} className="border-0 shadow-sm bg-gradient-to-br from-background to-muted/20">
+              <Card key={index} className="border shadow-sm bg-gradient-to-br from-background to-muted/20">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -194,7 +194,7 @@ function DashboardHome() {
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
             {/* Revenue Chart */}
-            <Card className="lg:col-span-4 border-0 shadow-sm">
+            <Card className="lg:col-span-4 border shadow-sm">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -241,7 +241,7 @@ function DashboardHome() {
             </Card>
 
             {/* Order Types Pie Chart */}
-            <Card className="lg:col-span-3 border-0 shadow-sm">
+            <Card className="lg:col-span-3 border shadow-sm">
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg">Order Distribution</CardTitle>
                 <p className="text-sm text-muted-foreground">By order type</p>
@@ -289,7 +289,7 @@ function DashboardHome() {
           {/* Tables and Orders Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Top Menu Items */}
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg">Top Selling Items</CardTitle>
                 <p className="text-sm text-muted-foreground">Most popular items today</p>
@@ -318,7 +318,7 @@ function DashboardHome() {
             </Card>
 
             {/* Recent Orders */}
-            <Card className="border-0 shadow-sm">
+            <Card className="border shadow-sm">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -355,7 +355,7 @@ function DashboardHome() {
           </div>
 
           {/* Quick Actions */}
-          <Card className="border-0 shadow-sm">
+          <Card className="border shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg">Quick Actions</CardTitle>
               <p className="text-sm text-muted-foreground">Common tasks and shortcuts</p>
