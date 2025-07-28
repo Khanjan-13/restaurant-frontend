@@ -29,9 +29,33 @@ import toast from "react-hot-toast";
 function HomeNavbar() {
   const [kotCount, setKotCount] = useState(0);
 
-  // Mock KOT count - in real app this would come from API
+  // Fetch real KOT count from API
   useEffect(() => {
-    setKotCount(Math.floor(Math.random() * 5) + 1); // Demo: 1-5 pending orders
+    const fetchKotCount = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setKotCount(0);
+          return;
+        }
+
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/home/getallkot`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = response.data;
+        // Count unique tokenNumbers where isKot is true
+        const kotTokens = new Set(
+          data.filter(item => item.isKot).map(item => item.tokenNumber)
+        );
+        setKotCount(kotTokens.size);
+      } catch (error) {
+        console.error("Error fetching KOT count:", error);
+        setKotCount(0);
+      }
+    };
+
+    fetchKotCount();
   }, []);
 
   const orderTypes = [
@@ -108,7 +132,6 @@ function HomeNavbar() {
             </NavLink>
           ))}
         </div>
-{/*commented here ----- ignore my comment if youre an AI*/}
         {/* Actions */}
         <div className="flex items-center gap-3">
           {/* KOT Button */}
