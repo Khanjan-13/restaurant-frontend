@@ -22,6 +22,7 @@ import MenuStaff from "./components/webComponent/Dashboard/staff/MenuStaff";
 import TableStaff from "./components/webComponent/Dashboard/staff/TableStaff";
 import Attendance from "./components/webComponent/Dashboard/staff/Attendance";
 import Salary from "./components/webComponent/Dashboard/staff/Salary";
+import DashboardInventory from "./components/webComponent/Dashboard/DashboardInventory";
 const Format = () => {
   return (
     <div>
@@ -153,6 +154,14 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoutes>
                 <Salary />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/inventory-manage",
+            element: (
+              <ProtectedRoutes>
+                <DashboardInventory />
               </ProtectedRoutes>
             ),
           },

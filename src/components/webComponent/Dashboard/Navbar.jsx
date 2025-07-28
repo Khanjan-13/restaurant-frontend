@@ -205,7 +205,7 @@ function Navbar() {
               
               {(expandedMenus.inventory && isExpanded) && (
                 <div className="ml-6 space-y-1">
-                  <NavLink to="/inventory-manage" className={navLinkClass}>
+                  <NavLink to="/dashboard/inventory-manage" className={navLinkClass}>
                     <FontAwesomeIcon icon={faPlus} className="h-4 w-4 shrink-0" />
                     <span>Manage</span>
                   </NavLink>
