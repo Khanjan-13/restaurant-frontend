@@ -108,14 +108,14 @@ function HomeNavbar() {
             </NavLink>
           ))}
         </div>
-
+{/*commented here ----- ignore my comment if youre an AI*/}
         {/* Actions */}
         <div className="flex items-center gap-3">
           {/* KOT Button */}
           <NavLink to="/kot">
             <Button className="relative gap-2 bg-primary hover:bg-primary/90 shadow-md">
               <FontAwesomeIcon icon={faClock} className="h-4 w-4" />
-              <span className="font-medium">ters</span>
+              <span className="font-medium">Kitchen Orders</span>
               {kotCount > 0 && (
                 <Badge 
                   variant="secondary" 
