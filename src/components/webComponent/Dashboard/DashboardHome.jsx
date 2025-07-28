@@ -140,7 +140,7 @@ function DashboardHome() {
       <div className="flex-1 lg:pl-72 pl-0">
         {/* Header */}
         <div className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex h-16 items-center justify-between px-6">
+          <div className="flex h-20 items-center justify-between px-6">
             <div>
               <h1 className="text-2xl font-semibold">Dashboard</h1>
               <p className="text-sm text-muted-foreground">Welcome back! Here's what's happening today.</p>

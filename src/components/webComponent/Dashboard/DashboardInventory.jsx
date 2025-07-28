@@ -309,7 +309,7 @@ function DashboardInventory() {
       <div className="flex-1 lg:pl-72 pl-0">
         {/* Header */}
         <div className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex h-16 items-center justify-between px-6">
+          <div className="flex h-20 items-center justify-between px-6">
             <div>
               <h1 className="text-2xl font-semibold">Inventory Management</h1>
               <p className="text-sm text-muted-foreground">
@@ -341,8 +341,8 @@ function DashboardInventory() {
         {/* Dashboard Content */}
         <div className="p-6 space-y-6">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <Card className="border shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <Card className="border shadow-sm bg-gradient-to-br from-background to-muted/20">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -356,7 +356,7 @@ function DashboardInventory() {
               </CardContent>
             </Card>
 
-            <Card className="border shadow-sm">
+            <Card className="border shadow-sm bg-gradient-to-br from-background to-muted/20">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -370,7 +370,7 @@ function DashboardInventory() {
               </CardContent>
             </Card>
 
-            <Card className="border shadow-sm">
+            <Card className="border shadow-sm bg-gradient-to-br from-background to-muted/20">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -384,7 +384,7 @@ function DashboardInventory() {
               </CardContent>
             </Card>
 
-            <Card className="border shadow-sm">
+            <Card className="border shadow-sm bg-gradient-to-br from-background to-muted/20">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -398,7 +398,7 @@ function DashboardInventory() {
               </CardContent>
             </Card>
 
-            <Card className="border shadow-sm">
+            <Card className="border shadow-sm bg-gradient-to-br from-background to-muted/20">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>

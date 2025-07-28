@@ -17,7 +17,8 @@ import {
   faX,
   faChevronDown,
   faUsers,
-  faBoxes
+  faBoxes,
+  faUserFriends
 } from "@fortawesome/free-solid-svg-icons";
 
 function Navbar() {
@@ -219,9 +220,19 @@ function Navbar() {
 
             <Separator className="my-4" />
 
+            {/* Customer Management */}
+            <div className="space-y-1">
+              <NavLink to="/dashboard/customers" className={navLinkClass}>
+                <FontAwesomeIcon icon={faUserFriends} className="h-4 w-4 shrink-0" />
+                {isExpanded && <span>Customers</span>}
+              </NavLink>
+            </div>
+
+            <Separator className="my-4" />
+
             {/* System */}
             <div className="space-y-1">
-              <NavLink to="/backup" className={navLinkClass}>
+              <NavLink to="/dashboard/backup" className={navLinkClass}>
                 <FontAwesomeIcon icon={faDatabase} className="h-4 w-4 shrink-0" />
                 {isExpanded && <span>Backup & Restore</span>}
               </NavLink>

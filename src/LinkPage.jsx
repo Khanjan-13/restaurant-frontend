@@ -23,6 +23,8 @@ import TableStaff from "./components/webComponent/Dashboard/staff/TableStaff";
 import Attendance from "./components/webComponent/Dashboard/staff/Attendance";
 import Salary from "./components/webComponent/Dashboard/staff/Salary";
 import DashboardInventory from "./components/webComponent/Dashboard/DashboardInventory";
+import DashboardCustomers from "./components/webComponent/Dashboard/DashboardCustomers";
+import BackupRestore from "./components/webComponent/Dashboard/BackupRestore";
 const Format = () => {
   return (
     <div>
@@ -162,6 +164,22 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoutes>
                 <DashboardInventory />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/customers",
+            element: (
+              <ProtectedRoutes>
+                <DashboardCustomers />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/backup",
+            element: (
+              <ProtectedRoutes>
+                <BackupRestore />
               </ProtectedRoutes>
             ),
           },
