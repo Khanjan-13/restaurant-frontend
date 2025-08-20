@@ -210,7 +210,7 @@ function Navbar() {
                     <FontAwesomeIcon icon={faPlus} className="h-4 w-4 shrink-0" />
                     <span>Manage</span>
                   </NavLink>
-                  <NavLink to="/inventory-attendance" className={navLinkClass}>
+                  <NavLink to="/dashboard/inventory-report" className={navLinkClass}>
                     <FontAwesomeIcon icon={faPencil} className="h-4 w-4 shrink-0" />
                     <span>Reports</span>
                   </NavLink>

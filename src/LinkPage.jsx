@@ -25,6 +25,7 @@ import Salary from "./components/webComponent/Dashboard/staff/Salary";
 import DashboardInventory from "./components/webComponent/Dashboard/DashboardInventory";
 import DashboardCustomers from "./components/webComponent/Dashboard/DashboardCustomers";
 import BackupRestore from "./components/webComponent/Dashboard/BackupRestore";
+import InventoryReport from "./components/webComponent/Dashboard/InventoryReport";
 const Format = () => {
   return (
     <div>
@@ -180,6 +181,14 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoutes>
                 <BackupRestore />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/inventory-report",
+            element: (
+              <ProtectedRoutes>
+                <InventoryReport />
               </ProtectedRoutes>
             ),
           },
