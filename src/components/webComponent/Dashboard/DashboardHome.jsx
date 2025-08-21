@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState, useEffect} from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -33,7 +33,7 @@ import {
   faListDots,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
-
+import axios from "axios";
 const data = [
   { name: "Jan", revenue: 4000 },
   { name: "Feb", revenue: 3000 },
@@ -43,8 +43,28 @@ const data = [
   { name: "Jun", revenue: 2390 },
   { name: "Jul", revenue: 3490 },
 ];
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 function DashboardHome() {
+   const [stats, setStats] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    averageOrderValue: 0,
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${BASE_URL}/dashboard/order-stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setStats(response.data);
+      } catch (error) {
+        console.error("Error fetching order stats:", error);
+      }
+    };
+    fetchStats();
+  }, []);
   return (
     <div>
       <div className="flex ml-56 min-h-screen flex-col bg-muted/40 pt-5 ">
@@ -61,8 +81,7 @@ function DashboardHome() {
                 />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">₹45,231.89</div>
-                <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold">₹{stats.totalRevenue.toLocaleString()}</div>                <p className="text-xs text-muted-foreground">
                   +20.1% from last month
                 </p>
               </CardContent>
@@ -76,8 +95,8 @@ function DashboardHome() {
                 />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+2,350</div>
-                <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold">+{stats.totalOrders}</div>                
+              <p className="text-xs text-muted-foreground">
                   +180.1% from last month
                 </p>
               </CardContent>
@@ -93,8 +112,7 @@ function DashboardHome() {
                 />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">₹19.99</div>
-                <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold">₹{stats.averageOrderValue.toFixed(2)}</div>                <p className="text-xs text-muted-foreground">
                   +5% from last month
                 </p>
               </CardContent>
