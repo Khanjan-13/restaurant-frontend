@@ -98,8 +98,8 @@ function OrdersBilling({ orderItems, setOrderItems }) {
             </thead>
             <tbody>
               ${kotItems
-                .map(
-                  (item) => `
+        .map(
+          (item) => `
                   <tr>
                     <td>${item.itemName}</td>
                     <td>${item.itemQuantity}</td>
@@ -107,8 +107,8 @@ function OrdersBilling({ orderItems, setOrderItems }) {
                     <td>${item.itemCategory}</td>
                   </tr>
                 `
-                )
-                .join("")}
+        )
+        .join("")}
             </tbody>
           </table>
           <div class="total">
@@ -161,8 +161,8 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         </thead>
         <tbody>
           ${items
-            .map(
-              (item) => `
+        .map(
+          (item) => `
             <tr>
               <td>${item.itemName}</td>
               <td>${item.itemPrice}</td>
@@ -170,8 +170,8 @@ function OrdersBilling({ orderItems, setOrderItems }) {
               <td>${item.itemPrice * item.itemQuantity}</td>
             </tr>
           `
-            )
-            .join("")}
+        )
+        .join("")}
         </tbody>
         <tfoot>
           <tr>
@@ -328,9 +328,9 @@ function OrdersBilling({ orderItems, setOrderItems }) {
   const subtotal =
     (Array.isArray(tableOrders)
       ? tableOrders.reduce(
-          (acc, item) => acc + item.itemPrice * item.itemQuantity,
-          0
-        )
+        (acc, item) => acc + item.itemPrice * item.itemQuantity,
+        0
+      )
       : 0) +
     (Array.isArray(orderItems)
       ? orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
@@ -403,6 +403,117 @@ function OrdersBilling({ orderItems, setOrderItems }) {
     navigate("/");
   };
 
+  // const handleSaveOrder = async (action) => {
+  //   try {
+  //     // Step 1: Check for authentication token
+  //     const token = localStorage.getItem("token");
+  //     if (!token) {
+  //       toast.error("Authentication token is missing. Please log in again.");
+  //       return;
+  //     }
+
+  //     // Step 2: Validate payment mode
+  //     if (!paymentMode) {
+  //       toast.error("Please select a payment mode.");
+  //       return;
+  //     }
+
+  //     const pickupTableNumber = "PICK UP";
+
+  //     // Step 3: Fetch order items from the KOT API
+  //     const kotApiUrl = `${BASE_URL}/home/getKotByTableNumber/${
+  //       tableId ?? pickupTableNumber
+  //     }`;
+  //     const kotResponse = await axios.get(kotApiUrl, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+
+  //     const kotData = kotResponse?.data?.aggregatedItems;
+
+  //     if (!kotData || !Array.isArray(kotData) || kotData.length === 0) {
+  //       toast.error("No items found for this table.");
+  //       return;
+  //     }
+
+  //     const orderItemsData = kotData.map((item) => ({
+  //       itemName: item.itemName,
+  //       itemPrice: item.itemPrice,
+  //       itemQuantity: item.itemQuantity,
+  //       itemCategory: item.itemCategory || "",
+  //       itemDescription: item.itemDescription || "",
+  //     }));
+
+  //     // Step 4: Generate token number based on today's date
+  //     const currentDate = new Date();
+  //     const datePrefix =
+  //       currentDate.getDate().toString().padStart(2, "0") +
+  //       (currentDate.getMonth() + 1).toString().padStart(2, "0"); // DDMM format
+  //     const dailyCounterKey = `dailyCounter_${datePrefix}`;
+
+  //     let dailyCounter = parseInt(
+  //       localStorage.getItem(dailyCounterKey) || "1",
+  //       10
+  //     );
+  //     const tokenNumber = `${datePrefix}${dailyCounter}`;
+  //     localStorage.setItem(dailyCounterKey, (dailyCounter + 1).toString());
+
+  //     // Step 5: Prepare the payload
+  //     const payload = {
+  //       tokenNumber, // Use the generated token number
+  //       items: orderItemsData,
+  //       totalAmount: total, // Ensure `total` is calculated and passed correctly
+  //       paymentMethod: paymentMode,
+  //       tableNumber: diningMode === "PICK UP" ? "PICK UP" : tableId,
+  //     };
+
+  //     // Step 6: Submit the order
+  //     const orderSaveUrl = `${BASE_URL}/dashboard/orderSave`;
+  //     await axios.post(orderSaveUrl, payload, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+
+  //     // Step 7: Update the table's order status
+  //     const updateKotUrl = `${BASE_URL}/home/updateKot`;
+  //     await axios.put(
+  //       updateKotUrl,
+  //       { tableNumber: payload.tableNumber, orderStatus: false },
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+
+  //     // Step 8: Delete the KOT record
+  //     const deleteKotUrl = `${BASE_URL}/home/deleteKot`;
+  //     await axios.delete(deleteKotUrl, {
+  //       data: { tableNumber: payload.tableNumber },
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+
+  //     // Step 9: Show success message
+  //     toast.success("Order saved and KOT deleted successfully!", {
+  //       style: {
+  //         marginTop: "40px",
+  //         boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
+  //       },
+  //     });
+
+  //     // Step 10: Print the order if action === "print"
+  //     if (action === "print") {
+  //       printOrder(payload);
+  //     }
+  //     navigate("/");
+  //   } catch (error) {
+  //     console.error("Error saving the order or deleting the KOT:", error);
+  //     if (error.response && error.response.data) {
+  //       toast.error(error.response.data.errorMessage || "An error occurred.");
+  //     } else {
+  //       toast.error(
+  //         "Failed to save the order or delete the KOT. Please try again."
+  //       );
+  //     }
+  //   }
+  // };
+
   const handleSaveOrder = async (action) => {
     try {
       // Step 1: Check for authentication token
@@ -418,101 +529,47 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         return;
       }
 
-      const pickupTableNumber = "PICK UP";
-
-      // Step 3: Fetch order items from the KOT API
-      const kotApiUrl = `${BASE_URL}/home/getKotByTableNumber/${
-        tableId ?? pickupTableNumber
-      }`;
-      const kotResponse = await axios.get(kotApiUrl, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const kotData = kotResponse?.data?.aggregatedItems;
-
-      if (!kotData || !Array.isArray(kotData) || kotData.length === 0) {
-        toast.error("No items found for this table.");
-        return;
-      }
-
-      const orderItemsData = kotData.map((item) => ({
-        itemName: item.itemName,
-        itemPrice: item.itemPrice,
-        itemQuantity: item.itemQuantity,
-        itemCategory: item.itemCategory || "",
-        itemDescription: item.itemDescription || "",
-      }));
-
-      // Step 4: Generate token number based on today's date
+      // Step 3: Generate token number (DDMM + daily counter)
       const currentDate = new Date();
       const datePrefix =
         currentDate.getDate().toString().padStart(2, "0") +
         (currentDate.getMonth() + 1).toString().padStart(2, "0"); // DDMM format
       const dailyCounterKey = `dailyCounter_${datePrefix}`;
 
-      let dailyCounter = parseInt(
-        localStorage.getItem(dailyCounterKey) || "1",
-        10
-      );
+      let dailyCounter = parseInt(localStorage.getItem(dailyCounterKey) || "1", 10);
       const tokenNumber = `${datePrefix}${dailyCounter}`;
       localStorage.setItem(dailyCounterKey, (dailyCounter + 1).toString());
 
-      // Step 5: Prepare the payload
-      const payload = {
-        tokenNumber, // Use the generated token number
-        items: orderItemsData,
-        totalAmount: total, // Ensure `total` is calculated and passed correctly
-        paymentMethod: paymentMode,
-        tableNumber: diningMode === "PICK UP" ? "PICK UP" : tableId,
-      };
-
-      // Step 6: Submit the order
-      const orderSaveUrl = `${BASE_URL}/dashboard/orderSave`;
-      await axios.post(orderSaveUrl, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // Step 7: Update the table's order status
-      const updateKotUrl = `${BASE_URL}/home/updateKot`;
-      await axios.put(
-        updateKotUrl,
-        { tableNumber: payload.tableNumber, orderStatus: false },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      // Step 4: Call backend API
+      const orderSaveUrl = `${BASE_URL}/dashboard/order-save/${tableId ?? "PICK UP"}`;
+      await axios.post(
+        orderSaveUrl,
+        { tokenNumber, paymentMethod: paymentMode },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Step 8: Delete the KOT record
-      const deleteKotUrl = `${BASE_URL}/home/deleteKot`;
-      await axios.delete(deleteKotUrl, {
-        data: { tableNumber: payload.tableNumber },
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // Step 9: Show success message
-      toast.success("Order saved and KOT deleted successfully!", {
+      // Step 5: Success notification
+      toast.success("Order saved successfully!", {
         style: {
           marginTop: "40px",
           boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
         },
       });
 
-      // Step 10: Print the order if action === "print"
+      // Step 6: Print if requested
       if (action === "print") {
-        printOrder(payload);
+        printOrder({ tokenNumber, paymentMethod: paymentMode });
       }
+
       navigate("/");
     } catch (error) {
-      console.error("Error saving the order or deleting the KOT:", error);
-      if (error.response && error.response.data) {
-        toast.error(error.response.data.errorMessage || "An error occurred.");
-      } else {
-        toast.error(
-          "Failed to save the order or delete the KOT. Please try again."
-        );
-      }
+      console.error("Error saving the order:", error);
+      toast.error(
+        error.response?.data?.error || "Failed to save the order. Please try again."
+      );
     }
   };
+
 
   return (
     <div className="bg-background shadow-lg rounded-none px-2 py-2 flex flex-col md:w-[32rem] h-[93vh] w-full">
@@ -521,11 +578,10 @@ function OrdersBilling({ orderItems, setOrderItems }) {
           <Button
             variant="outline"
             size="sm"
-            className={`px-2 ${
-              diningMode === "DINE IN"
+            className={`px-2 ${diningMode === "DINE IN"
                 ? "bg-[#4caf50] text-white"
                 : "bg-gray-200 text-black"
-            }`}
+              }`}
             onClick={() => handleDiningModeChange("DINE IN")}
           >
             DINE IN
@@ -533,11 +589,10 @@ function OrdersBilling({ orderItems, setOrderItems }) {
           <Button
             variant="outline"
             size="sm"
-            className={`px-2 ${
-              diningMode === "PICK UP"
+            className={`px-2 ${diningMode === "PICK UP"
                 ? "bg-[#4caf50] text-white"
                 : "bg-gray-200"
-            }`}
+              }`}
             onClick={() => handleDiningModeChange("PICK UP")}
           >
             PICK UP
