@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -46,7 +47,7 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 
-// Sample data - in real app this would come from API
+// Sample data, in real app this would come from API
 const revenueData = [
   { name: "Jan", revenue: 45000, orders: 240 },
   { name: "Feb", revenue: 52000, orders: 280 },
@@ -58,9 +59,9 @@ const revenueData = [
 ];
 
 const orderTypeData = [
-  { name: "Dine-in", value: 65, color: "hsl(var(--primary))" },
-  { name: "Pickup", value: 25, color: "hsl(var(--secondary))" },
-  { name: "Delivery", value: 10, color: "hsl(var(--accent))" },
+  { name: "Dine-in", value: 65, color: "#10b981" },
+  { name: "Pickup", value: 25, color: "#059669" },
+  { name: "Delivery", value: 10, color: "#047857" },
 ];
 
 const topItems = [
@@ -80,39 +81,70 @@ const recentOrders = [
 
 function DashboardHome() {
   const [timeRange, setTimeRange] = useState("today");
+  const [orderStats, setOrderStats] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    averageOrderValue: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
+  // Fetch order stats from API
+  useEffect(() => {
+    const fetchOrderStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/dashboard/order-stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setOrderStats(response.data);
+      } catch (error) {
+        console.error("Error fetching order stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrderStats();
+  }, [timeRange]);
+  // Calculate stats based on API data
   const stats = [
     {
-      title: "Today's Revenue",
-      value: "₹45,231",
-      change: "+20.1%",
-      changeType: "positive",
+      title: "Total Revenue",
+      value: `₹${orderStats.totalRevenue?.toLocaleString() || 0}`,
+      change: "0%",
+      changeType: "neutral",
       icon: faIndianRupeeSign,
-      description: "from yesterday"
+      description: "total revenue"
     },
     {
-      title: "Orders Today",
-      value: "234",
-      change: "+12.5%",
-      changeType: "positive",
+      title: "Total Orders",
+      value: orderStats.totalOrders?.toString() || "0",
+      change: "0%",
+      changeType: "neutral",
       icon: faShoppingCart,
-      description: "from yesterday"
+      description: "total orders"
     },
     {
-      title: "Active Tables",
-      value: "18/24",
-      change: "75%",
+      title: "Active Customers",
+      value: "100", //Static right now, will be dynamic later
+      change: "0%",
       changeType: "neutral",
       icon: faUtensils,
       description: "occupancy rate"
     },
     {
       title: "Avg Order Value",
-      value: "₹193",
-      change: "+5.2%",
-      changeType: "positive",
+      value: `₹${Math.round(orderStats.averageOrderValue || 0)}`,
+      change: "0%",
+      changeType: "neutral",
       icon: faCalculator,
-      description: "from last week"
+      description: "average per order"
     },
   ];
 
@@ -135,23 +167,25 @@ function DashboardHome() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50">
       {/* Main Content */}
       <div className="flex-1 lg:pl-72 pl-0">
         {/* Header */}
-        <div className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex h-20 items-center justify-between px-6">
-            <div>
-              <h1 className="text-2xl font-semibold">Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Welcome back! Here's what's happening today.</p>
+        <div className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-sm">
+          <div className="flex h-24 md:h-32 items-center justify-between p-4 md:p-6">
+            <div className="py-2 md:py-5">
+              <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent">
+                Dashboard
+              </h1>
+              <p className="text-sm text-gray-600">Welcome back! Here's what's happening today.</p>
             </div>
             <div className="flex items-center gap-4">
               <select
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
-                className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all"
               >
-                <option value="today">Today</option>
+                <option value="today">Today</option>  
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
                 <option value="year">This Year</option>
@@ -161,47 +195,66 @@ function DashboardHome() {
         </div>
 
         {/* Dashboard Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 md:p-6 space-y-6">
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat, index) => (
-              <Card key={index} className="border shadow-sm bg-gradient-to-br from-background to-muted/20">
-                <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {loading ? (
+            // Loading skeleton
+            Array.from({ length: 4 }).map((_, index) => (
+              <Card key={index} className="border border-gray-200 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
+                      <div className="h-8 bg-gray-200 rounded w-1/2 mb-1 animate-pulse"></div>
+                      <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                    </div>
+                    <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            stats.map((stat, index) => (
+              <Card key={index} className="group border border-gray-200 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-green-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <CardContent className="p-4 md:p-6 relative">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                      <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                       <div className="flex items-center gap-2 mt-2">
-                        <h3 className="text-2xl font-bold">{stat.value}</h3>
-                        <span className={`text-xs font-medium ${
-                          stat.changeType === "positive" ? "text-green-600" : 
-                          stat.changeType === "negative" ? "text-red-600" : 
-                          "text-muted-foreground"
+                        <h3 className="text-xl md:text-2xl font-bold text-gray-800">{stat.value}</h3>
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                          stat.changeType === "positive" ? "text-green-700 bg-green-100" : 
+                          stat.changeType === "negative" ? "text-red-700 bg-red-100" : 
+                          "text-gray-600 bg-gray-100"
                         }`}>
                           {stat.change}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+                      <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
                     </div>
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <FontAwesomeIcon icon={stat.icon} className="h-6 w-6 text-primary" />
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                      <FontAwesomeIcon icon={stat.icon} className="h-5 w-5 text-white" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+            ))
+          )}
+        </div>
 
           {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-6">
             {/* Revenue Chart */}
-            <Card className="lg:col-span-4 border shadow-sm">
+            <Card className="lg:col-span-4 border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg">Revenue Trend</CardTitle>
-                    <p className="text-sm text-muted-foreground">Monthly revenue and order count</p>
+                    <CardTitle className="text-lg font-bold text-gray-800">Revenue Trend</CardTitle>
+                    <p className="text-sm text-gray-600">Monthly revenue and order count</p>
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 transition-all">
                     <FontAwesomeIcon icon={faEye} className="h-4 w-4 mr-2" />
                     View Details
                   </Button>
@@ -212,8 +265,8 @@ function DashboardHome() {
                   <AreaChart data={revenueData}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
@@ -230,10 +283,10 @@ function DashboardHome() {
                     <Area 
                       type="monotone" 
                       dataKey="revenue" 
-                      stroke="hsl(var(--primary))" 
+                      stroke="#10b981" 
                       fillOpacity={1} 
                       fill="url(#colorRevenue)" 
-                      strokeWidth={2}
+                      strokeWidth={3}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -241,10 +294,10 @@ function DashboardHome() {
             </Card>
 
             {/* Order Types Pie Chart */}
-            <Card className="lg:col-span-3 border shadow-sm">
+            <Card className="lg:col-span-3 border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg">Order Distribution</CardTitle>
-                <p className="text-sm text-muted-foreground">By order type</p>
+                <CardTitle className="text-lg font-bold text-gray-800">Order Distribution</CardTitle>
+                <p className="text-sm text-gray-600">By order type</p>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -287,63 +340,63 @@ function DashboardHome() {
           </div>
 
           {/* Tables and Orders Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6"> */}
             {/* Top Menu Items */}
-            <Card className="border shadow-sm">
+            {/* <Card className="border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg">Top Selling Items</CardTitle>
-                <p className="text-sm text-muted-foreground">Most popular items today</p>
+                <CardTitle className="text-lg font-bold text-gray-800">Top Selling Items</CardTitle>
+                <p className="text-sm text-gray-600">Most popular items today</p>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {topItems.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-green-50 to-green-100/50 border border-green-200/50 hover:bg-gradient-to-r hover:from-green-100 hover:to-green-200/50 transition-all duration-300">
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-sm font-semibold text-primary">#{index + 1}</span>
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-sm">
+                          <span className="text-sm font-bold text-white">#{index + 1}</span>
                         </div>
                         <div>
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">{item.orders} orders</p>
+                          <p className="font-semibold text-gray-800">{item.name}</p>
+                          <p className="text-sm text-gray-600">{item.orders} orders</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">₹{item.revenue.toLocaleString()}</p>
-                        <p className="text-sm text-muted-foreground">Revenue</p>
+                        <p className="font-bold text-green-700">₹{item.revenue.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500">Revenue</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Recent Orders */}
-            <Card className="border shadow-sm">
+            {/* <Card className="border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg">Recent Orders</CardTitle>
-                    <p className="text-sm text-muted-foreground">Latest customer orders</p>
+                    <CardTitle className="text-lg font-bold text-gray-800">Recent Orders</CardTitle>
+                    <p className="text-sm text-gray-600">Latest customer orders</p>
                   </div>
-                  <Button variant="outline" size="sm">View All</Button>
+                  <Button variant="outline" size="sm" className="border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 transition-all">View All</Button>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {recentOrders.map((order, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-gradient-to-r hover:from-gray-50 hover:to-green-50/30 transition-all duration-300 border border-transparent hover:border-green-200/50">
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="font-medium">{order.customer}</p>
-                          <span className="text-sm text-muted-foreground">{order.time}</span>
+                          <p className="font-semibold text-gray-800">{order.customer}</p>
+                          <span className="text-sm text-gray-500">{order.time}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <p className="text-sm text-muted-foreground">{order.table}</p>
+                          <p className="text-sm text-gray-600">{order.table}</p>
                           <div className="flex items-center gap-2">
-                            <Badge variant={getStatusBadgeVariant(order.status)}>
+                            <Badge variant={getStatusBadgeVariant(order.status)} className="text-xs">
                               {order.status}
                             </Badge>
-                            <span className="font-semibold">₹{order.amount}</span>
+                            <span className="font-bold text-green-700">₹{order.amount}</span>
                           </div>
                         </div>
                       </div>
@@ -351,32 +404,32 @@ function DashboardHome() {
                   ))}
                 </div>
               </CardContent>
-            </Card>
-          </div>
+            </Card> */}
+          {/* </div> */}
 
           {/* Quick Actions */}
-          <Card className="border shadow-sm">
+          <Card className="border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
             <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
-              <p className="text-sm text-muted-foreground">Common tasks and shortcuts</p>
+              <CardTitle className="text-lg font-bold text-gray-800">Quick Actions</CardTitle>
+              <p className="text-sm text-gray-600">Common tasks and shortcuts</p>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button variant="outline" className="h-20 flex-col gap-2">
-                  <FontAwesomeIcon icon={faPlus} className="h-5 w-5" />
-                  <span className="text-sm">Add Order</span>
+                <Button variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                  <FontAwesomeIcon icon={faPlus} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-sm font-medium">Add Order</span>
                 </Button>
-                <Button variant="outline" className="h-20 flex-col gap-2">
-                  <FontAwesomeIcon icon={faUtensils} className="h-5 w-5" />
-                  <span className="text-sm">Manage Tables</span>
+                <Button variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                  <FontAwesomeIcon icon={faUtensils} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-sm font-medium">Manage Tables</span>
                 </Button>
-                <Button variant="outline" className="h-20 flex-col gap-2">
-                  <FontAwesomeIcon icon={faListDots} className="h-5 w-5" />
-                  <span className="text-sm">View Menu</span>
+                <Button variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                  <FontAwesomeIcon icon={faListDots} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-sm font-medium">View Menu</span>
                 </Button>
-                <Button variant="outline" className="h-20 flex-col gap-2">
-                  <FontAwesomeIcon icon={faUsers} className="h-5 w-5" />
-                  <span className="text-sm">Staff Schedule</span>
+                <Button variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                  <FontAwesomeIcon icon={faUsers} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-sm font-medium">Staff Schedule</span>
                 </Button>
               </div>
             </CardContent>

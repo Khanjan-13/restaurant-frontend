@@ -58,33 +58,35 @@ function HorizNavbar() {
   };
 
   const navLinkClass = ({ isActive }) =>
-    `group relative flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
+    `group relative flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300 ${
       isActive
-        ? "bg-primary text-primary-foreground shadow-md"
-        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        ? "bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-500/25"
+        : "text-gray-600 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100/50 hover:text-green-700 hover:shadow-sm"
     }`;
 
   const mobileNavLinkClass = ({ isActive }) =>
-    `flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
+    `flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-300 ${
       isActive
-        ? "bg-primary text-primary-foreground"
-        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        ? "bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg"
+        : "text-gray-600 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100/50 hover:text-green-700"
     }`;
 
   return (
     <>
       {/* Desktop Navigation */}
       <div className="hidden md:block">
-        <Menubar className="justify-between w-full fixed top-0 z-50 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <Menubar className="justify-between w-full fixed top-0 z-50 h-16 border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-lg">
           {/* Brand Section */}
           <div className="flex items-center gap-4 px-4">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                <FontAwesomeIcon icon={faUtensils} className="h-4 w-4 text-primary-foreground" />
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center shadow-lg">
+                <FontAwesomeIcon icon={faUtensils} className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-primary">Table No. 21</h1>
-                <p className="text-xs text-muted-foreground">Dining Management System</p>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent">
+                  Table No 21
+                </h1>
+                <p className="text-xs text-gray-600">Restaurant Management System</p>
               </div>
             </div>
           </div>
@@ -114,35 +116,35 @@ function HorizNavbar() {
 
             {/* User Menu */}
             <MenubarMenu>
-              <MenubarTrigger className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-accent">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <FontAwesomeIcon icon={faUserCircle} className="h-4 w-4 text-primary" />
+              <MenubarTrigger className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-green-50 hover:text-green-700 transition-all">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center shadow-sm">
+                  <FontAwesomeIcon icon={faUserCircle} className="h-4 w-4 text-white" />
                 </div>
                 <div className="hidden lg:block text-left">
-                  <p className="text-sm font-medium">
+                  <p className="text-sm font-semibold text-gray-800">
                     {error ? "Error" : ownerName || "Loading..."}
                   </p>
-                  <p className="text-xs text-muted-foreground">Restaurant Owner</p>
+                  <p className="text-xs text-gray-600">Restaurant Owner</p>
                 </div>
               </MenubarTrigger>
-              <MenubarContent align="end" className="w-56">
-                <MenubarItem className="font-medium">
+              <MenubarContent align="end" className="w-56 bg-white border border-gray-200 shadow-xl rounded-lg">
+                <MenubarItem className="font-semibold text-green-700 hover:bg-green-50">
                   <FontAwesomeIcon icon={faUserCircle} className="h-4 w-4 mr-2" />
                   Hello, {error ? "User" : ownerName || "Loading..."}!
                 </MenubarItem>
-                <MenubarSeparator />
-                <MenubarItem>
+                <MenubarSeparator className="bg-gray-200" />
+                <MenubarItem className="hover:bg-green-50 text-gray-700">
                   <FontAwesomeIcon icon={faKey} className="h-4 w-4 mr-2" />
                   Change Password
                 </MenubarItem>
-                <MenubarItem>
+                <MenubarItem className="hover:bg-green-50 text-gray-700">
                   <FontAwesomeIcon icon={faEdit} className="h-4 w-4 mr-2" />
                   Edit Profile
                 </MenubarItem>
-                <MenubarSeparator />
+                <MenubarSeparator className="bg-gray-200" />
                 <MenubarItem 
                   onClick={handleLogout}
-                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 focus:text-red-700 focus:bg-red-50"
                 >
                   <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2" />
                   Logout
@@ -156,15 +158,17 @@ function HorizNavbar() {
       {/* Mobile Navigation */}
       <div className="md:hidden">
         {/* Mobile Header */}
-        <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-200 shadow-lg">
           <div className="flex items-center justify-between h-16 px-4">
             {/* Brand */}
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                <FontAwesomeIcon icon={faUtensils} className="h-4 w-4 text-primary-foreground" />
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center shadow-md">
+                <FontAwesomeIcon icon={faUtensils} className="h-4 w-4 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-primary">Table No. 21</h1>
+                <h1 className="text-lg font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent">
+                  Table No 21
+                </h1>
               </div>
             </div>
 
@@ -173,7 +177,7 @@ function HorizNavbar() {
               variant="ghost"
               size="sm"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="h-10 w-10 p-0"
+              className="h-10 w-10 p-0 hover:bg-green-50 hover:text-green-700 transition-all"
             >
               <FontAwesomeIcon icon={faBars} className="h-5 w-5" />
             </Button>
@@ -186,19 +190,19 @@ function HorizNavbar() {
         )}
 
         {/* Mobile Menu Drawer */}
-        <div className={`fixed top-0 right-0 z-50 h-full w-80 bg-background border-l transition-transform duration-300 ease-in-out ${
+        <div className={`fixed top-0 right-0 z-50 h-full w-80 bg-white border-l border-gray-200 shadow-xl transition-transform duration-300 ease-in-out ${
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}>
           <div className="flex flex-col h-full">
             {/* Mobile Menu Header */}
-            <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-green-100/30">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <FontAwesomeIcon icon={faUserCircle} className="h-5 w-5 text-primary" />
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center shadow-sm">
+                  <FontAwesomeIcon icon={faUserCircle} className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <p className="font-medium">{error ? "Error" : ownerName || "Loading..."}</p>
-                  <p className="text-sm text-muted-foreground">Restaurant Owner</p>
+                  <p className="font-semibold text-gray-800">{error ? "Error" : ownerName || "Loading..."}</p>
+                  <p className="text-sm text-gray-600">Restaurant Owner</p>
                 </div>
               </div>
             </div>
@@ -234,18 +238,18 @@ function HorizNavbar() {
             </div>
 
             {/* Mobile Menu Footer */}
-            <div className="border-t p-4 space-y-2">
-              <Button variant="ghost" className="w-full justify-start gap-3">
+            <div className="border-t border-gray-200 p-4 space-y-2 bg-gradient-to-r from-green-50 to-green-100/30">
+              <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-green-100 hover:text-green-700 transition-all">
                 <FontAwesomeIcon icon={faKey} className="h-4 w-4" />
                 Change Password
               </Button>
-              <Button variant="ghost" className="w-full justify-start gap-3">
+              <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-green-100 hover:text-green-700 transition-all">
                 <FontAwesomeIcon icon={faEdit} className="h-4 w-4" />
                 Edit Profile
               </Button>
               <Button 
                 variant="ghost" 
-                className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 transition-all"
                 onClick={() => {
                   setIsMenuOpen(false);
                   handleLogout();

@@ -45,13 +45,13 @@ function Navbar() {
   };
 
   const navLinkClass = ({ isActive }) =>
-    `group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+    `group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-300 ${
       isActive
-        ? "bg-primary text-primary-foreground shadow-md"
-        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        ? "bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-500/25"
+        : "text-gray-600 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100/50 hover:text-green-700 hover:shadow-sm"
     } ${!isExpanded ? "justify-center px-2" : ""}`;
 
-  const menuHeaderClass = `group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-200 text-primary cursor-pointer hover:bg-accent/50 ${!isExpanded ? "justify-center px-2" : ""}`;
+  const menuHeaderClass = `group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-300 text-green-700 cursor-pointer hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100/50 ${!isExpanded ? "justify-center px-2" : ""}`;
 
   return (
     <>
@@ -64,20 +64,22 @@ function Navbar() {
       )}
       
       <aside 
-        className={`fixed left-0 top-0 z-50 h-full border-r border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 z-50 h-full border-r border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-xl transition-all duration-300 ease-in-out ${
           isExpanded ? "w-72" : "w-16"
         } ${isExpanded ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         {/* Header */}
-        <div className="flex h-16 items-center justify-between border-b border-border/40 px-4">
+        <div className="flex h-16 items-center justify-between border-b border-gray-200 bg-gradient-to-r from-green-50 to-green-100/30 px-4">
           {isExpanded && (
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">T21</span>
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-sm">TB</span>
               </div>
               <div>
-                <h1 className="font-semibold text-lg">Table No. 21</h1>
-                <p className="text-xs text-muted-foreground">Dining Management</p>
+                <h1 className="font-bold text-lg bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent">
+                  Table No 21
+                </h1>
+                <p className="text-xs text-gray-600">Restaurant Management</p>
               </div>
             </div>
           )}
@@ -85,7 +87,7 @@ function Navbar() {
             variant="ghost"
             size="sm"
             onClick={toggleSidebar}
-            className="h-8 w-8 p-0 lg:flex hidden"
+            className="h-8 w-8 p-0 lg:flex hidden hover:bg-green-100 hover:text-green-700 transition-all"
           >
             <FontAwesomeIcon icon={isExpanded ? faX : faBars} className="h-4 w-4" />
           </Button>
@@ -93,7 +95,7 @@ function Navbar() {
 
         {/* Navigation */}
         <div className="flex-1 overflow-auto py-6">
-          <nav className="space-y-2 px-3">
+          <nav className="space-y-3 px-3">
             {/* Main Navigation */}
             <div className="space-y-1">
               <NavLink to="/dashboard" end className={navLinkClass}>
@@ -112,7 +114,7 @@ function Navbar() {
               </NavLink>
             </div>
 
-            <Separator className="my-4" />
+            <Separator className="my-4 bg-gradient-to-r from-transparent via-green-200 to-transparent" />
 
             {/* Menu Management */}
             <div className="space-y-1">
@@ -146,7 +148,7 @@ function Navbar() {
               )}
             </div>
 
-            <Separator className="my-4" />
+            <Separator className="my-4 bg-gradient-to-r from-transparent via-green-200 to-transparent" />
 
             {/* Staff Management */}
             <div className="space-y-1">
@@ -184,7 +186,7 @@ function Navbar() {
               )}
             </div>
 
-            <Separator className="my-4" />
+            <Separator className="my-4 bg-gradient-to-r from-transparent via-green-200 to-transparent" />
 
             {/* Inventory Management */}
             <div className="space-y-1">
@@ -218,7 +220,7 @@ function Navbar() {
               )}
             </div>
 
-            <Separator className="my-4" />
+            <Separator className="my-4 bg-gradient-to-r from-transparent via-green-200 to-transparent" />
 
             {/* Customer Management */}
             <div className="space-y-1">
@@ -228,7 +230,7 @@ function Navbar() {
               </NavLink>
             </div>
 
-            <Separator className="my-4" />
+            <Separator className="my-4 bg-gradient-to-r from-transparent via-green-200 to-transparent" />
 
             {/* System */}
             <div className="space-y-1">
@@ -242,14 +244,14 @@ function Navbar() {
 
         {/* Footer */}
         {isExpanded && (
-          <div className="border-t border-border/40 p-4">
-            <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground text-xs font-semibold">A</span>
+          <div className="border-t border-gray-200 p-4 bg-gradient-to-r from-green-50 to-green-100/30">
+            <div className="flex items-center gap-3 rounded-lg bg-white/80 backdrop-blur-sm p-3 shadow-sm border border-green-200/50">
+              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center shadow-sm">
+                <span className="text-white text-xs font-semibold">A</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">Admin User</p>
-                <p className="text-xs text-muted-foreground truncate">admin@tableno21.com</p>
+                <p className="text-sm font-semibold truncate text-gray-800">Admin User</p>
+                <p className="text-xs text-gray-600 truncate">admin@tastybites.com</p>
               </div>
             </div>
           </div>
@@ -261,7 +263,7 @@ function Navbar() {
         variant="outline"
         size="sm"
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 lg:hidden h-10 w-10 p-0"
+        className="fixed top-4 left-4 z-50 lg:hidden h-10 w-10 p-0 bg-white border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 shadow-lg transition-all"
       >
         <FontAwesomeIcon icon={faBars} className="h-4 w-4" />
       </Button>
