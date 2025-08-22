@@ -22,6 +22,13 @@ const SignupPage = () => {
     password: "",
     confirmPassword: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const validatePassword = (password) => {
+    // At least 8 chars, one uppercase, one lowercase, one number, one special char
+    const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/;
+    return complexityRegex.test(password);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,12 +38,65 @@ const SignupPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate required fields
+    const requiredFields = ['ownerName', 'restaurantName', 'email', 'mobile', 'address', 'city', 'state', 'pincode'];
+    for (const field of requiredFields) {
+      if (!formData[field] || formData[field].trim() === '') {
+        toast.error(`${field.charAt(0).toUpperCase() + field.slice(1)} is required.`);
+        return;
+      }
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    // Validate mobile number (basic validation)
+    const mobileRegex = /^\d{10}$/;
+    if (!mobileRegex.test(formData.mobile.replace(/\D/g, ''))) {
+      toast.error("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    // Validate pincode (6 digits)
+    const pincodeRegex = /^\d{6}$/;
+    if (!pincodeRegex.test(formData.pincode)) {
+      toast.error("Please enter a valid 6-digit pincode.");
+      return;
+    }
+
+    if (!validatePassword(formData.password)) {
+      toast.error(
+        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
+      );
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match!");
       return;
     }
 
+    setIsLoading(true);
+    
     try {
+      // Log the data being sent for debugging
+      console.log("Sending signup data:", {
+        ownerName: formData.ownerName,
+        restaurantName: formData.restaurantName,
+        email: formData.email,
+        mobile: formData.mobile,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        gstNo: formData.gstNo,
+        password: formData.password,
+      });
+
       const response = await axios.post(`${BASE_URL}/signup/create`, {
         ownerName: formData.ownerName,
         restaurantName: formData.restaurantName,
@@ -58,13 +118,25 @@ const SignupPage = () => {
         toast.error("Something went wrong, please try again.");
       }
     } catch (error) {
-      console.error(
-        "Error during signup:",
-        error.response?.data || error.message
-      );
-      toast.error(
-        error.response?.data?.message || "Failed to signup, please try again."
-      );
+      console.error("Full error object:", error);
+      console.error("Error response:", error.response);
+      console.error("Error status:", error.response?.status);
+      console.error("Error data:", error.response?.data);
+      console.error("Error message:", error.message);
+      
+      if (error.response?.status === 500) {
+        toast.error("Server error (500). Please check your data and try again.");
+      } else if (error.response?.status === 400) {
+        toast.error(error.response?.data?.message || "Invalid data provided.");
+      } else if (error.response?.status === 409) {
+        toast.error("Email already exists. Please use a different email.");
+      } else {
+        toast.error(
+          error.response?.data?.message || "Failed to signup, please try again."
+        );
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -230,6 +302,9 @@ const SignupPage = () => {
                 placeholder="Enter password"
                 required
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Must be 8+ chars with uppercase, lowercase, number, and special character.
+              </p>
             </div>
             {/* Confirm Password */}
             <div className="mb-4">
@@ -249,9 +324,14 @@ const SignupPage = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isLoading}
+            className={`w-full py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              isLoading 
+                ? "bg-gray-400 cursor-not-allowed" 
+                : "bg-blue-500 hover:bg-blue-600"
+            } text-white`}
           >
-            Sign Up
+            {isLoading ? "Signing Up..." : "Sign Up"}
           </button>
         </form>
         <p className="text-sm text-center text-gray-600 mt-4">
