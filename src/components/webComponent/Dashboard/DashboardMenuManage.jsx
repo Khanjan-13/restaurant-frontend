@@ -45,7 +45,18 @@ function DashboardMenuManage() {
   const [loading, setLoading] = useState(false);
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  // Dynamic API base URL selection
+  useEffect(() => {
+    localStorage.setItem('apiMode', 'local');
+  }, []);
+  const getBaseUrl = () => {
+    const apiMode = localStorage.getItem('apiMode') || 'local';
+    if (apiMode === 'local') {
+      return import.meta.env.VITE_API_BASE_URL_LOCAL;
+    }
+    return import.meta.env.VITE_API_BASE_URL_ONLINE;
+  };
+  const BASE_URL = getBaseUrl();
 
   useEffect(() => {
     fetchItems();
@@ -155,6 +166,10 @@ function DashboardMenuManage() {
       toast.error("Please enter a valid price.");
       return;
     }
+    if (!updateMenuItem.quantity || updateMenuItem.quantity <= 0) {
+      toast.error("Please enter a valid quantity.");
+      return;
+    }
 
     try {
       const token = localStorage.getItem("token");
@@ -162,13 +177,13 @@ function DashboardMenuManage() {
         toast.error("Authentication token is missing. Please log in again.");
         return;
       }
-
+      console.log(updateMenuItem);
       const response = await axios.put(
         `${BASE_URL}/dashboard/menu/itemupdate/${updateMenuItem._id}`,
         updateMenuItem,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
+      console.log(response);
       toast.success(response.data.message || "Item updated successfully");
       fetchItems();
       setIsDialogOpen(false);
@@ -376,10 +391,12 @@ function DashboardMenuManage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Item Name</TableHead>
+                        <TableHead>Quantity</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead className="text-right">Price</TableHead>
                         <TableHead className="text-center">Available</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
+
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -399,6 +416,11 @@ function DashboardMenuManage() {
                                 <p className="text-sm text-muted-foreground">#{index + 1}</p>
                               </div>
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                              {item.quantity}
+                            </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className="bg-blue-50 text-blue-700">
@@ -521,6 +543,19 @@ function DashboardMenuManage() {
                 step="0.01"
                 value={updateMenuItem.price || ""}
                 onChange={(e) => setupdateMenuItem({ ...updateMenuItem, price: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Quantity</label>
+              <Input
+                type="number"
+                placeholder="Enter quantity"
+                name="quantity"
+                min="1"
+                step="0.01"
+                value={updateMenuItem.quantity || ""}
+                onChange={(e) => setupdateMenuItem({ ...updateMenuItem, quantity: e.target.value })}
                 required
               />
             </div>

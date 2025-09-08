@@ -91,7 +91,7 @@ function DashboardCustomers() {
         throw new Error("Authentication token is missing. Please log in again.");
       }
 
-      const response = await axios.get(`${BASE_URL}/customers`, {
+      const response = await axios.get(`${BASE_URL}/dashboard/customers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -124,7 +124,7 @@ function DashboardCustomers() {
         discountPercentage: parseFloat(customerForm.discountPercentage)
       };
 
-      const response = await axios.post(`${BASE_URL}/customers`, customerData, {
+      const response = await axios.post(`${BASE_URL}/dashboard/customers`, customerData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -153,7 +153,7 @@ function DashboardCustomers() {
         discountPercentage: parseFloat(customerForm.discountPercentage)
       };
 
-      const response = await axios.put(`${BASE_URL}/customers/${editingCustomer._id}`, customerData, {
+      const response = await axios.put(`${BASE_URL}/dashboard/customers/${editingCustomer._id}`, customerData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -181,7 +181,7 @@ function DashboardCustomers() {
         throw new Error("Authentication token is missing. Please log in again.");
       }
 
-      const response = await axios.delete(`${BASE_URL}/customers/${customerId}`, {
+      const response = await axios.delete(`${BASE_URL}/dashboard/customers/${customerId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

@@ -43,7 +43,19 @@ function DashboardMenu() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  // Dynamic API base URL selection
+  // Default to local API for now
+  useEffect(() => {
+    localStorage.setItem('apiMode', 'local');
+  }, []);
+  const getBaseUrl = () => {
+    const apiMode = localStorage.getItem('apiMode') || 'local';
+    if (apiMode === 'local') {
+      return import.meta.env.VITE_API_BASE_URL_LOCAL;
+    }
+    return import.meta.env.VITE_API_BASE_URL_ONLINE;
+  };
+  const BASE_URL = getBaseUrl();
 
   useEffect(() => {
     fetchCategories();
@@ -189,7 +201,7 @@ function DashboardMenu() {
     if (!menuItems[selected]) {
       setMenuItems((prevItems) => ({
         ...prevItems,
-        [selected]: [{ name: "", price: "" }],
+        [selected]: [{ name: "", quantity: "", price: "" }],
       }));
     }
   };
@@ -200,7 +212,7 @@ function DashboardMenu() {
         ...menuItems,
         [selectedCategory]: [
           ...(menuItems[selectedCategory] || []),
-          { name: "", price: "" },
+          { name: "", quantity: "", price: "" },
         ],
       });
     }
@@ -224,7 +236,7 @@ function DashboardMenu() {
   const canAddNewItem = (items) => {
     if (!items || items.length === 0) return false;
     const lastItem = items[items.length - 1];
-    return lastItem.name && lastItem.price;
+    return lastItem.name && lastItem.quantity && lastItem.price;
   };
 
   const submitMenuItem = async (e) => {
@@ -239,7 +251,7 @@ function DashboardMenu() {
     }
 
     const validItems = menuItems[selectedCategory].filter(
-      item => item.name.trim() && item.price.trim()
+      item => item.name.trim() && item.quantity.trim() && item.price.trim()
     );
 
     if (validItems.length === 0) {
@@ -267,7 +279,7 @@ function DashboardMenu() {
       toast.success(response.data.message || "Menu items added successfully");
       setMenuItems((prevItems) => ({
         ...prevItems,
-        [selectedCategory]: [{ name: "", price: "" }],
+        [selectedCategory]: [{ name: "", quantity: "", price: "" }],
       }));
     } catch (error) {
       console.error("Error adding menu items:", error);
@@ -399,7 +411,7 @@ function DashboardMenu() {
             <CardHeader className="pb-4">
               <CardTitle className="text-lg">Add Menu Items</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Add items to your categories with names and prices
+                Add items to your categories with names, quantities, and prices
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -438,6 +450,16 @@ function DashboardMenu() {
                               value={item.name}
                               onChange={(e) =>
                                 handleItemChange(index, "name", e.target.value)
+                              }
+                            />
+                          </div>
+                          <div className="w-32">
+                            <Input
+                              type="text"
+                              placeholder={`Quantity`}
+                              value={item.quantity}
+                              onChange={(e) =>
+                                handleItemChange(index, "quantity", e.target.value)
                               }
                             />
                           </div>

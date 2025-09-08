@@ -21,6 +21,7 @@ import {
   faChevronRight,
   faPlus
 } from "@fortawesome/free-solid-svg-icons";
+import toast from "react-hot-toast";
 
 function Orders() {
   const [dishTypes, setDishTypes] = useState([]);
@@ -32,6 +33,26 @@ function Orders() {
   const [loading, setLoading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("all"); // all, veg, non-veg, popular
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  const getAvailableQty = (dish) => {
+    const raw = (
+      dish?.quantity ??
+      dish?.availableQuantity ??
+      dish?.quantityAvailable ??
+      dish?.availableQty ??
+      dish?.stock ??
+      dish?.stockQty ??
+      dish?.currentStock ??
+      dish?.itemQuantity ??
+      dish?.qty ??
+      dish?.remaining ??
+      dish?.balance ??
+      null
+    );
+    if (raw === null || raw === undefined) return null;
+    const num = typeof raw === "string" ? parseInt(raw, 10) : Number(raw);
+    return Number.isFinite(num) ? num : null;
+  };
 
   useEffect(() => {
     const fetchCategory = async () => {
@@ -69,12 +90,42 @@ function Orders() {
     fetchCategory();
   }, []);
 
+  // Poll for latest quantities at regular intervals
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/dashboard/menu/itemall`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setDishTypes(response.data);
+      } catch (err) {
+        // Silently ignore transient polling errors
+        // console.warn("Polling error (menu items):", err);
+      }
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(intervalId);
+  }, [BASE_URL]);
+
   const handleAddToOrder = (dish) => {
+    const available = getAvailableQty(dish);
+    if (available !== null && available <= 0) {
+      return;
+    }
     setOrderItems((prevItems) => {
       const existingItemIndex = prevItems.findIndex((item) => item._id === dish._id);
       if (existingItemIndex >= 0) {
+        const existing = prevItems[existingItemIndex];
+        const currentQty = existing.quantity || 0;
+        if (available !== null && currentQty >= available) {
+          toast.error(`Only ${available} in stock`);
+          return prevItems;
+        }
         return prevItems.map((item, index) =>
-          index === existingItemIndex ? { ...item, quantity: item.quantity + 1 } : item
+          index === existingItemIndex ? { ...item, quantity: currentQty + 1 } : item
         );
       } else {
         return [...prevItems, { ...dish, quantity: 1 }];
@@ -306,8 +357,13 @@ function Orders() {
                 {filteredDishes.map((dish) => (
                  <Card
                  key={dish._id}
-                 className="group relative cursor-pointer rounded-2xl overflow-hidden border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
-                 onClick={() => handleAddToOrder(dish)}
+                 className={`group relative cursor-pointer rounded-2xl overflow-hidden border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 ${
+                   (getAvailableQty(dish) !== null && getAvailableQty(dish) <= 0) ? "opacity-60 cursor-not-allowed hover:scale-100" : ""
+                 }`}
+                 onClick={() => {
+                   const qty = getAvailableQty(dish);
+                   if (qty === null || qty > 0) handleAddToOrder(dish);
+                 }}
                >
                  <CardContent className="p-4 md:p-5">
                    {/* Top row with name + badges */}
@@ -318,7 +374,7 @@ function Orders() {
                
                      <div className="flex gap-2 items-center">
                        {dish.isPopular && (
-                         <span className="px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-yellow-100 text-yellow-700 font-medium shadow-sm">
+                         <span className="px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-yellow-100 text-yellow-700 font-medium shadow-sm" onClick={(e) => e.stopPropagation()}>
                            ⭐ Popular
                          </span>
                        )}
@@ -326,15 +382,26 @@ function Orders() {
                          <span
                            className={`px-2 py-0.5 text-[10px] md:text-xs rounded-full font-medium shadow-sm ${
                              dish.isVeg ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                           }`}
+                           }`} onClick={(e) => e.stopPropagation()}
                          >
                            {dish.isVeg ? "Veg" : "Non-Veg"}
                          </span>
                        )}
+                       {(() => {
+                         const qty = getAvailableQty(dish);
+                         const inStock = qty === null ? null : qty > 0;
+                         return (
+                           <span className={`px-2 py-0.5 text-[10px] md:text-xs rounded-full font-medium shadow-sm ${
+                             inStock === null ? "bg-gray-100 text-gray-600" : inStock ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
+                           }`} onClick={(e) => e.stopPropagation()}>
+                             Qty: {qty === null ? "-" : qty}
+                           </span>
+                         );
+                       })()}
                      </div>
                    </div>
                
-                   {/* Price + description */}
+                   {/* Price + qty */}
                    <div className="flex items-center justify-between">
                      <p className="text-sm md:text-base font-bold text-green-700">₹{dish.price}</p>
                    </div>
@@ -348,8 +415,14 @@ function Orders() {
                
                  {/* Floating + button */}
                  <button
-                   className="absolute bottom-3 right-3 bg-green-600 text-white rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-green-700"
-                 >     <FontAwesomeIcon icon={faPlus} className="h-3 w-3 md:h-4 md:w-4" />
+                   disabled={getAvailableQty(dish) !== null && getAvailableQty(dish) <= 0}
+                   className={`absolute bottom-3 right-3 rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 ${
+                     (getAvailableQty(dish) !== null && getAvailableQty(dish) <= 0)
+                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                       : "bg-green-600 text-white hover:bg-green-700"
+                   }`}
+                 >
+                   <FontAwesomeIcon icon={faPlus} className="h-3 w-3 md:h-4 md:w-4" />
                  </button>
                </Card>
                

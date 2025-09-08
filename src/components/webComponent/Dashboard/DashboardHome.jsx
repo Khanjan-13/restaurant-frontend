@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,15 +21,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Line,
-  LineChart,
   Tooltip,
   ResponsiveContainer,
-  AreaChart,
-  Area,
   PieChart,
   Pie,
   Cell,
@@ -45,18 +39,11 @@ import {
   faUtensils,
   faShoppingCart,
   faPlus,
+  faDatabase,
 } from "@fortawesome/free-solid-svg-icons";
+import { faUserFriends } from "@fortawesome/free-solid-svg-icons";
 
-// Sample data, in real app this would come from API
-const revenueData = [
-  { name: "Jan", revenue: 45000, orders: 240 },
-  { name: "Feb", revenue: 52000, orders: 280 },
-  { name: "Mar", revenue: 48000, orders: 260 },
-  { name: "Apr", revenue: 61000, orders: 320 },
-  { name: "May", revenue: 55000, orders: 290 },
-  { name: "Jun", revenue: 67000, orders: 350 },
-  { name: "Jul", revenue: 71000, orders: 380 },
-];
+// Revenue trend chart removed in favor of live total revenue display
 
 const orderTypeData = [
   { name: "Dine-in", value: 65, color: "#10b981" },
@@ -80,6 +67,7 @@ const recentOrders = [
 ];
 
 function DashboardHome() {
+  const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState("today");
   const [orderStats, setOrderStats] = useState({
     totalRevenue: 0,
@@ -246,13 +234,13 @@ function DashboardHome() {
 
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-6">
-            {/* Revenue Chart */}
+            {/* Total Revenue (Live) */}
             <Card className="lg:col-span-4 border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg font-bold text-gray-800">Revenue Trend</CardTitle>
-                    <p className="text-sm text-gray-600">Monthly revenue and order count</p>
+                    <CardTitle className="text-lg font-bold text-gray-800">Total Revenue</CardTitle>
+                    <p className="text-sm text-gray-600">Live total revenue from orders</p>
                   </div>
                   <Button variant="outline" size="sm" className="border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 transition-all">
                     <FontAwesomeIcon icon={faEye} className="h-4 w-4 mr-2" />
@@ -261,35 +249,22 @@ function DashboardHome() {
                 </div>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={revenueData}>
-                    <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--background))', 
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgb(0 0 0 / 0.15)'
-                      }}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke="#10b981" 
-                      fillOpacity={1} 
-                      fill="url(#colorRevenue)" 
-                      strokeWidth={3}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-br from-green-50 to-green-100/50 border border-green-200/60">
+                  <div>
+                    <p className="text-sm text-gray-600">Current Total</p>
+                    <div className="mt-1 flex items-end gap-2">
+                      <span className="text-3xl md:text-4xl font-extrabold text-green-700">
+                        ₹{(orderStats.totalRevenue || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500">Orders</p>
+                    <p className="text-lg font-semibold text-gray-800">{orderStats.totalOrders || 0}</p>
+                    <p className="text-xs text-gray-500 mt-2">Avg Order Value</p>
+                    <p className="text-lg font-semibold text-gray-800">₹{Math.round(orderStats.averageOrderValue || 0)}</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -414,22 +389,50 @@ function DashboardHome() {
               <p className="text-sm text-gray-600">Common tasks and shortcuts</p>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <Button onClick={() => navigate("/dashboard/orders")} variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
                   <FontAwesomeIcon icon={faPlus} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                  <span className="text-sm font-medium">Add Order</span>
+                  <span className="text-sm font-medium">View Order</span>
                 </Button>
-                <Button variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                <Button onClick={() => navigate("/dashboard/tables")} variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
                   <FontAwesomeIcon icon={faUtensils} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
                   <span className="text-sm font-medium">Manage Tables</span>
                 </Button>
-                <Button variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                <Button onClick={() => navigate("/dashboard/menu")} variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
                   <FontAwesomeIcon icon={faListDots} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
                   <span className="text-sm font-medium">View Menu</span>
                 </Button>
-                <Button variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                <Button onClick={() => navigate("/dashboard/staff")} variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
                   <FontAwesomeIcon icon={faUsers} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
                   <span className="text-sm font-medium">Staff Schedule</span>
+                </Button>
+                <Button onClick={() => navigate("/dashboard/staff/attendance")} variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                  <FontAwesomeIcon icon={faClock} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-sm font-medium">Attendance</span>
+                </Button>
+                <Button onClick={() => navigate("/dashboard/staff/salary")} variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                  <FontAwesomeIcon icon={faCalculator} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-sm font-medium">Staff Salary</span>
+                </Button>
+                <Button onClick={() => navigate("/dashboard/inventory-manage")} variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                  <FontAwesomeIcon icon={faShoppingCart} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-sm font-medium">Inventory</span>
+                </Button>
+                <Button onClick={() => navigate("/dashboard/customers")} variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                  <FontAwesomeIcon icon={faUserFriends} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-sm font-medium">Customers</span>
+                </Button>
+                <Button onClick={() => navigate("/dashboard/backup")} variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                  <FontAwesomeIcon icon={faDatabase} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-sm font-medium">Backup & Restore</span>
+                </Button>
+                <Button onClick={() => navigate("/dashboard/inventory-report")} variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                  <FontAwesomeIcon icon={faChartLine} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-sm font-medium">Inventory Report</span>
+                </Button>
+                <Button onClick={() => navigate("/dashboard/menu-manage")} variant="outline" className="h-20 flex-col gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md transition-all duration-300 group">
+                  <FontAwesomeIcon icon={faListDots} className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-sm font-medium">Manage Menu</span>
                 </Button>
               </div>
             </CardContent>

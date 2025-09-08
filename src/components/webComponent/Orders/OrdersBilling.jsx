@@ -15,7 +15,48 @@ function OrdersBilling({ orderItems, setOrderItems }) {
   const [diningMode, setDiningMode] = useState(tableId ? "DINE IN" : "PICK UP");
   const [tableOrders, setTableOrders] = useState([]);
   const [paymentMode, setPaymentMode] = useState(null); // State to track payment mode
+  const [stockById, setStockById] = useState({}); // id -> available quantity from backend
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  // Fetch current stock for all menu items to enforce caps
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    let isCancelled = false;
+
+    const fetchStock = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/dashboard/menu/itemall`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!isCancelled && Array.isArray(res.data)) {
+          const map = res.data.reduce((acc, it) => {
+            if (it?._id != null) acc[it._id] = Number(it.quantity ?? 0);
+            return acc;
+          }, {});
+          setStockById(map);
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    fetchStock();
+    const intervalId = setInterval(fetchStock, 10000);
+    return () => {
+      isCancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [BASE_URL]);
+
+  const getAvailableQty = (item) => {
+    if (!item) return null;
+    // Prefer live stock map; fallback to item.originalQuantity if present
+    if (item._id && Number.isFinite(stockById[item._id])) return stockById[item._id];
+    if (Number.isFinite(item.originalQuantity)) return Number(item.originalQuantity);
+    return null;
+  };
 
   const printKot = (tokenNumber, kotItems, totalAmount, diningMode) => {
     const printWindow = window.open("", "_blank");
@@ -640,7 +681,13 @@ function OrdersBilling({ orderItems, setOrderItems }) {
       setTableOrders(updatedTableOrders);
     } else {
       const updatedOrderItems = [...orderItems];
-      updatedOrderItems[index].quantity += 1;
+      const available = getAvailableQty(updatedOrderItems[index]);
+      const current = updatedOrderItems[index].quantity;
+      if (available !== null && current >= available) {
+        toast.error("No more stock available for this item");
+        return;
+      }
+      updatedOrderItems[index].quantity = current + 1;
       setOrderItems(updatedOrderItems);
     }
   };
@@ -706,14 +753,19 @@ function OrdersBilling({ orderItems, setOrderItems }) {
   };
 
   const handleQuantityChange = (index, value, isTableOrder = false) => {
-    const quantity = Math.max(1, Number(value));
+    const next = Math.max(1, Number(value));
     if (isTableOrder) {
       const updatedTableOrders = [...tableOrders];
-      updatedTableOrders[index].itemQuantity = quantity;
+      updatedTableOrders[index].itemQuantity = next;
       setTableOrders(updatedTableOrders);
     } else {
       const updatedOrderItems = [...orderItems];
-      updatedOrderItems[index].quantity = quantity;
+      const available = getAvailableQty(updatedOrderItems[index]);
+      const capped = available !== null ? Math.min(next, available) : next;
+      if (available !== null && next > available) {
+        toast.error(`Only ${available} in stock`);
+      }
+      updatedOrderItems[index].quantity = capped;
       setOrderItems(updatedOrderItems);
     }
   };
@@ -732,10 +784,6 @@ function OrdersBilling({ orderItems, setOrderItems }) {
 
   const tax = subtotal * 0.05;
   const total = subtotal + tax;
-
-  // console.log("Subtotal:", subtotal);
-  // console.log("Tax:", tax);
-  // console.log("Total:", total);
 
   const handleSubmitKot = async (action) => {
     try {
@@ -761,11 +809,12 @@ function OrdersBilling({ orderItems, setOrderItems }) {
       // Prepare the KOT items for submission
       const kotItems = orderItems.map((item) => ({
         itemName: item.name,
-        itemPrice: item.price,
-        itemQuantity: item.quantity,
+        itemPrice: Number(item.price),
+        itemQuantity: Number(item.quantity),
         itemCategory: item.category,
         tableNumber: diningMode === "PICK UP" ? "PICK UP" : tableId,
         orderStatus: true,
+        itemDescription: item.description || "",
       }));
 
       // Submit the KOT with the incremented token number
@@ -774,7 +823,7 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         {
           tokenNumber: newTokenNumber,
           items: kotItems,
-          totalAmount: total,
+          totalAmount: Number(total),
         },
         {
           headers: {
@@ -782,6 +831,58 @@ function OrdersBilling({ orderItems, setOrderItems }) {
           },
         }
       );
+
+      // Deduct stock for each item (best-effort)
+      try {
+        const resolveId = (it) => it?._id || it?.id || it?.itemId || it?.dishId || null;
+        const updates = orderItems
+          .map((it) => ({ id: resolveId(it), qty: Number(it.quantity || 0) }))
+          .filter((e) => e.id && e.qty > 0)
+          .map(async ({ id, qty }) => {
+            try {
+              // Preferred: atomic decrement if available on backend
+              await axios.put(
+                `${BASE_URL}/dashboard/menu/itemdecrement/${id}`,
+                { amount: qty },
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+            } catch (err) {
+              const msg = err?.response?.data || err?.message || "";
+              // Fallback: compute next and PUT itemupdate
+              const currentRaw = stockById?.[id];
+              const current = Number.isFinite(currentRaw) ? Number(currentRaw) : null;
+              if (current === null) return; // skip if unknown
+              const nextQty = Math.max(0, current - qty);
+              await axios.put(
+                `${BASE_URL}/dashboard/menu/itemupdate/${id}`,
+                { quantity: nextQty },
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+            }
+          });
+        const results = await Promise.allSettled(updates);
+
+        // Optimistically update local stock so UI reflects deduction immediately
+        setStockById((prev) => {
+          const draft = { ...prev };
+          for (const it of orderItems) {
+            const id = resolveId(it);
+            const qty = Number(it.quantity || 0);
+            if (!id || !Number.isFinite(draft[id]) || !(qty > 0)) continue;
+            draft[id] = Math.max(0, Number(draft[id]) - qty);
+          }
+          return draft;
+        });
+
+        // Surface if any backend update failed (non-blocking)
+        const anyRejected = results.some((r) => r.status === "rejected");
+        if (anyRejected) {
+          toast.error("Some items couldn't update stock on server. Please refresh.");
+        }
+      } catch (e) {
+        // Non-blocking: show a lightweight toast
+        toast.error("Stock update failed. Please refresh.");
+      }
 
       // Show success message
       toast.success(`KOT submitted successfully! Token #${newTokenNumber}`);
@@ -796,117 +897,6 @@ function OrdersBilling({ orderItems, setOrderItems }) {
     }
     navigate("/");
   };
-
-  // const handleSaveOrder = async (action) => {
-  //   try {
-  //     // Step 1: Check for authentication token
-  //     const token = localStorage.getItem("token");
-  //     if (!token) {
-  //       toast.error("Authentication token is missing. Please log in again.");
-  //       return;
-  //     }
-
-  //     // Step 2: Validate payment mode
-  //     if (!paymentMode) {
-  //       toast.error("Please select a payment mode.");
-  //       return;
-  //     }
-
-  //     const pickupTableNumber = "PICK UP";
-
-  //     // Step 3: Fetch order items from the KOT API
-  //     const kotApiUrl = `${BASE_URL}/home/getKotByTableNumber/${
-  //       tableId ?? pickupTableNumber
-  //     }`;
-  //     const kotResponse = await axios.get(kotApiUrl, {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-
-  //     const kotData = kotResponse?.data?.aggregatedItems;
-
-  //     if (!kotData || !Array.isArray(kotData) || kotData.length === 0) {
-  //       toast.error("No items found for this table.");
-  //       return;
-  //     }
-
-  //     const orderItemsData = kotData.map((item) => ({
-  //       itemName: item.itemName,
-  //       itemPrice: item.itemPrice,
-  //       itemQuantity: item.itemQuantity,
-  //       itemCategory: item.itemCategory || "",
-  //       itemDescription: item.itemDescription || "",
-  //     }));
-
-  //     // Step 4: Generate token number based on today's date
-  //     const currentDate = new Date();
-  //     const datePrefix =
-  //       currentDate.getDate().toString().padStart(2, "0") +
-  //       (currentDate.getMonth() + 1).toString().padStart(2, "0"); // DDMM format
-  //     const dailyCounterKey = `dailyCounter_${datePrefix}`;
-
-  //     let dailyCounter = parseInt(
-  //       localStorage.getItem(dailyCounterKey) || "1",
-  //       10
-  //     );
-  //     const tokenNumber = `${datePrefix}${dailyCounter}`;
-  //     localStorage.setItem(dailyCounterKey, (dailyCounter + 1).toString());
-
-  //     // Step 5: Prepare the payload
-  //     const payload = {
-  //       tokenNumber, // Use the generated token number
-  //       items: orderItemsData,
-  //       totalAmount: total, // Ensure `total` is calculated and passed correctly
-  //       paymentMethod: paymentMode,
-  //       tableNumber: diningMode === "PICK UP" ? "PICK UP" : tableId,
-  //     };
-
-  //     // Step 6: Submit the order
-  //     const orderSaveUrl = `${BASE_URL}/dashboard/orderSave`;
-  //     await axios.post(orderSaveUrl, payload, {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-
-  //     // Step 7: Update the table's order status
-  //     const updateKotUrl = `${BASE_URL}/home/updateKot`;
-  //     await axios.put(
-  //       updateKotUrl,
-  //       { tableNumber: payload.tableNumber, orderStatus: false },
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       }
-  //     );
-
-  //     // Step 8: Delete the KOT record
-  //     const deleteKotUrl = `${BASE_URL}/home/deleteKot`;
-  //     await axios.delete(deleteKotUrl, {
-  //       data: { tableNumber: payload.tableNumber },
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-
-  //     // Step 9: Show success message
-  //     toast.success("Order saved and KOT deleted successfully!", {
-  //       style: {
-  //         marginTop: "40px",
-  //         boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
-  //       },
-  //     });
-
-  //     // Step 10: Print the order if action === "print"
-  //     if (action === "print") {
-  //       printOrder(payload);
-  //     }
-  //     navigate("/");
-  //   } catch (error) {
-  //     console.error("Error saving the order or deleting the KOT:", error);
-  //     if (error.response && error.response.data) {
-  //       toast.error(error.response.data.errorMessage || "An error occurred.");
-  //     } else {
-  //       toast.error(
-  //         "Failed to save the order or delete the KOT. Please try again."
-  //       );
-  //     }
-  //   }
-  // };
 
   const handleSaveOrder = async (action) => {
     try {
@@ -1079,7 +1069,10 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         ) : (
           <p></p>
         )}
-        {orderItems.map((item, index) => (
+        {orderItems.map((item, index) => {
+          const available = getAvailableQty(item);
+          const atCap = available !== null && item.quantity >= available;
+          return (
           <div key={`order-item-${index}`}>
             <div className="flex items-center justify-between">
               {/* Remove Button */}
@@ -1119,12 +1112,14 @@ function OrdersBilling({ orderItems, setOrderItems }) {
                    onFocus={(e) => e.target.select()}
                    className="text-xs md:text-base font-medium w-8 md:w-12 text-center border border-gray-300 rounded"
                    min="1"
+                   max={available ?? undefined}
                  />
                  <Button
                    variant="outline"
                    size="sm"
-                   className="px-1 md:px-2 text-xs"
+                   className={`px-1 md:px-2 text-xs ${atCap ? "opacity-50 cursor-not-allowed" : ""}`}
                    onClick={() => handleIncrement(index, false)} // Pass false for orderItems
+                   disabled={atCap}
                  >
                    +
                  </Button>
@@ -1136,9 +1131,14 @@ function OrdersBilling({ orderItems, setOrderItems }) {
                  </h3>
                </div>
             </div>
+            {available !== null && (
+              <div className="text-[10px] md:text-xs text-muted-foreground text-center mt-1">
+                Available: {available}
+              </div>
+            )}
             <Separator className="mt-1" />
           </div>
-        ))}
+        );})}
       </div>
 
       <Separator className="my-2" />

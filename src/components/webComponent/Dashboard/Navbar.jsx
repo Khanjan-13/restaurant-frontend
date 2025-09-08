@@ -220,7 +220,7 @@ function Navbar() {
               )}
             </div>
 
-            <Separator className="my-4 bg-gradient-to-r from-transparent via-green-200 to-transparent" />
+            {/* <Separator className="my-4 bg-gradient-to-r from-transparent via-green-200 to-transparent" /> */}
 
             {/* Customer Management */}
             <div className="space-y-1">

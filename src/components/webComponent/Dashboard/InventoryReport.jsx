@@ -44,10 +44,13 @@ import {
   faPrint,
   faEye,
 } from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
 
 function InventoryReport() {
   const [selectedPeriod, setSelectedPeriod] = useState("month");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [totals, setTotals] = useState({ itemCount: null, totalQuantity: null });
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Mock data for inventory reports
   const mockData = {
@@ -143,6 +146,27 @@ function InventoryReport() {
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"];
 
+  useEffect(() => {
+    const fetchTotals = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const res = await axios.get(`${BASE_URL}/dashboard/menu/total-quantity`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res?.data) {
+          setTotals({
+            itemCount: Number(res.data.itemCount ?? 0),
+            totalQuantity: Number(res.data.totalQuantity ?? 0),
+          });
+        }
+      } catch (e) {
+        // ignore, fallback to mock UI numbers
+      }
+    };
+    fetchTotals();
+  }, [BASE_URL]);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="flex-1 lg:pl-72 pl-0">
@@ -188,11 +212,26 @@ function InventoryReport() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total Items</p>
-                    <h3 className="text-2xl font-bold mt-2">145</h3>
+                    <h3 className="text-2xl font-bold mt-2">{totals.itemCount ?? 145}</h3>
                     <p className="text-xs text-green-600 mt-1">+5% from last month</p>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
                     <FontAwesomeIcon icon={faBoxes} className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total Units (Menu)</p>
+                    <h3 className="text-2xl font-bold mt-2">{totals.totalQuantity ?? 0}</h3>
+                    <p className="text-xs text-green-600 mt-1">Live from backend</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <FontAwesomeIcon icon={faChartLine} className="h-6 w-6 text-green-600" />
                   </div>
                 </div>
               </CardContent>
