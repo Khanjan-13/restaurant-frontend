@@ -20,6 +20,7 @@ import AddStaff from "./components/webComponent/Dashboard/staff/AddStaff";
 import LoginStaff from "./components/webComponent/Dashboard/staff/LoginStaff";
 import MenuStaff from "./components/webComponent/Dashboard/staff/MenuStaff";
 import TableStaff from "./components/webComponent/Dashboard/staff/TableStaff";
+import KotStaff from "./components/webComponent/Dashboard/staff/KotStaff";
 const Format = () => {
   return (
     <div>
@@ -133,6 +134,10 @@ const router = createBrowserRouter([
         ],
       },
     ],
+  },
+  {
+    path: "/staff/kot",
+    element: <KotStaff />,
   },
   {
     path: "/dashboard/staff-login",

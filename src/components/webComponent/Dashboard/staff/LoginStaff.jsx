@@ -4,11 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast"; // Make sure you have react-hot-toast installed
+import { toast } from "react-hot-toast";
 
 function LoginStaff() {
   const [formData, setFormData] = useState({ email: "", password: "" });
-    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -20,7 +20,7 @@ function LoginStaff() {
 
     try {
       const response = await axios.post(
-        `${BASE_URL}/dashboard/staff/login`, // Replace with actual backend route
+        `${BASE_URL}/dashboard/staff/login`,
         formData,
         {
           headers: {
@@ -32,18 +32,35 @@ function LoginStaff() {
       if (response.status === 200) {
         toast.success("Welcome!");
         console.log(response.data);
+
         localStorage.setItem("token", response.data.token);
+
         // Save createdBy (admin who created the staff)
         if (response.data.staff?.createdBy) {
           localStorage.setItem("createdBy", response.data.staff.createdBy._id);
         }
-        navigate("/dashboard");
+
+        // Save staff role for later use
+        if (response.data.staff?.role) {
+          localStorage.setItem("role", response.data.staff.role);
+
+          // Redirect based on role
+          if (response.data.staff.role === "chef") {
+            navigate("/staff/kot"); // Kitchen Order Tickets page
+          } else if (response.data.staff.role === "waiter") {
+            navigate("/dashboard"); // Main home page for waiters
+          } else {
+            navigate("/dashboard"); // fallback
+          }
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (error) {
       if (error.response) {
         toast.error(
           error.response.data.message ||
-            "Something went wrong, please try again."
+          "Something went wrong, please try again."
         );
       } else if (error.request) {
         toast.error("No response from the server.");
