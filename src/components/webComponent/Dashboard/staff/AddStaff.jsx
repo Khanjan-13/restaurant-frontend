@@ -13,40 +13,44 @@ import {
 } from "@/components/ui/table";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+
 function AddStaff() {
   const [staffData, setStaffData] = useState({
     name: "",
     mobile: "",
     email: "",
     password: "",
+    role: "waiter", // default role
   });
   const [staffList, setStaffList] = useState([]);
-  // For dialog & deletion
   const [openDialog, setOpenDialog] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  const token = localStorage.getItem("token");
 
   const handleChange = (e) => {
     setStaffData({ ...staffData, [e.target.name]: e.target.value });
   };
-  const token = localStorage.getItem("token"); // or sessionStorage.getItem()
+
+  const handleRoleChange = (value) => {
+    setStaffData({ ...staffData, role: value });
+  };
 
   const fetchStaff = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/dashboard/staff`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setStaffList(res.data.data);
-      console.log(res.data);
+      console.log(res.data.data);
     } catch (error) {
       console.error(error);
     }
@@ -54,45 +58,39 @@ function AddStaff() {
 
   const addStaff = async () => {
     try {
-      await axios.post(
-        `${BASE_URL}/dashboard/staff/register`,
-        staffData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setStaffData({ name: "", mobile: "", email: "", password: "" });
+      await axios.post(`${BASE_URL}/dashboard/staff/register`, staffData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setStaffData({ name: "", mobile: "", email: "", password: "", role: "waiter" });
       fetchStaff();
     } catch (error) {
-      console.error(
-        "Error adding staff:",
-        error.response?.data || error.message
-      );
+      console.error("Error adding staff:", error.response?.data || error.message);
     }
   };
 
   const deleteStaff = async (id) => {
     try {
-      await axios.delete(`${BASE_URL}/dashboard/staff/${id}`);
+      await axios.delete(`${BASE_URL}/dashboard/staff/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       fetchStaff();
       setOpenDialog(false);
     } catch (error) {
       console.error(error);
     }
   };
+
   const openDeleteDialog = (id) => {
     setDeleteId(id);
     setOpenDialog(true);
   };
+
   useEffect(() => {
     fetchStaff();
   }, []);
 
   return (
-    <div className="flex ml-56 min-h-screen flex-col bg-muted/40 pt-5 ">
+    <div className="flex ml-56 min-h-screen flex-col bg-muted/40 pt-5">
       <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
         <div className="w-full max-w-7xl space-y-8">
           {/* Add Staff Card */}
@@ -129,11 +127,17 @@ function AddStaff() {
                 value={staffData.password}
                 onChange={handleChange}
               />
+              <Select onValueChange={handleRoleChange} value={staffData.role}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="waiter">Waiter</SelectItem>
+                  <SelectItem value="chef">Chef</SelectItem>
+                </SelectContent>
+              </Select>
               <div className="col-span-full text-right mt-2">
-                <Button
-                  onClick={addStaff}
-                  className="bg-[#4caf50] hover:bg-[#419844]"
-                >
+                <Button onClick={addStaff} className="bg-[#4caf50] hover:bg-[#419844]">
                   Add Staff
                 </Button>
               </div>
@@ -153,6 +157,7 @@ function AddStaff() {
                     <TableHead>Name</TableHead>
                     <TableHead>Mobile</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -160,17 +165,12 @@ function AddStaff() {
                   {Array.isArray(staffList) && staffList.length > 0 ? (
                     staffList.map((staff, index) => (
                       <TableRow key={staff._id}>
-                        <TableCell className="text-left">{index + 1}</TableCell>
-                        <TableCell className="text-left">
-                          {staff.name}
-                        </TableCell>
-                        <TableCell className="text-left">
-                          {staff.mobile}
-                        </TableCell>
-                        <TableCell className="text-left">
-                          {staff.email}
-                        </TableCell>
-                        <TableCell className="text-left">
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>{staff.name}</TableCell>
+                        <TableCell>{staff.mobile}</TableCell>
+                        <TableCell>{staff.email}</TableCell>
+                        <TableCell className="capitalize">{staff.role}</TableCell>
+                        <TableCell>
                           <Button
                             variant="destructive"
                             size="sm"
@@ -183,7 +183,7 @@ function AddStaff() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center">
+                      <TableCell colSpan={6} className="text-center">
                         No staff members found.
                       </TableCell>
                     </TableRow>
@@ -192,24 +192,21 @@ function AddStaff() {
               </Table>
             </CardContent>
           </Card>
+
           {/* Confirmation Dialog */}
           <Dialog open={openDialog} onOpenChange={setOpenDialog}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Confirm Delete</DialogTitle>
                 <DialogDescription>
-                  Are you sure you want to delete this staff member? This action
-                  cannot be undone.
+                  Are you sure you want to delete this staff member? This action cannot be undone.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="space-x-2">
                 <Button variant="outline" onClick={() => setOpenDialog(false)}>
                   Cancel
                 </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => deleteStaff(deleteId)}
-                >
+                <Button variant="destructive" onClick={() => deleteStaff(deleteId)}>
                   Delete
                 </Button>
               </DialogFooter>
