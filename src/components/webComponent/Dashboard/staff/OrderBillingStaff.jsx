@@ -400,7 +400,7 @@ function OrdersBillingStaff({ orderItems, setOrderItems }) {
             console.error("Error submitting KOT:", error);
             toast.error("Failed to submit KOT");
         }
-        navigate("/");
+        navigate("/staff/table");
     };
 
     return (
