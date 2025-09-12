@@ -48,7 +48,7 @@ function LoginStaff() {
           if (response.data.staff.role === "chef") {
             navigate("/staff/kot"); // Kitchen Order Tickets page
           } else if (response.data.staff.role === "waiter") {
-            navigate("/dashboard"); // Main home page for waiters
+            navigate("/staff/table"); // Main home page for waiters
           } else {
             navigate("/dashboard"); // fallback
           }

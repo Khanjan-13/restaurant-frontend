@@ -137,19 +137,36 @@ const router = createBrowserRouter([
   },
   {
     path: "/staff/kot",
-    element: <KotStaff />,
+    element: (
+      <ProtectedRoutes>
+        <KotStaff />
+      </ProtectedRoutes>
+    ),
   },
   {
     path: "/dashboard/staff-login",
     element: <LoginStaff />,
   },
+
   {
     path: "/staff/menu",
     element: <MenuStaff />,
   },
   {
     path: "/staff/table",
-    element: <TableStaff />,
+    element: (
+      <ProtectedRoutes>
+        <TableStaff />
+      </ProtectedRoutes>
+    ),
+  },
+  {
+    path: "/staff/menu",
+    element: (
+      <ProtectedRoutes>
+        <MenuStaff />
+      </ProtectedRoutes>
+    ),
   },
   {
     path: "/login",

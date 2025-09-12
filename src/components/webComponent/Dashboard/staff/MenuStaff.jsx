@@ -1,115 +1,172 @@
 import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, ChevronUp, ChevronDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import OrdersBilling from "@/components/webComponent/Orders/OrdersBilling";
 import axios from "axios";
+import OrdersBillingStaff from "./OrderBillingStaff";
 
 function MenuStaff() {
-  const [menuItems, setMenuItems] = useState([]);
-  const [filteredItems, setFilteredItems] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [cart, setCart] = useState({});
-  const token = localStorage.getItem("token");
+  const [dishTypes, setDishTypes] = useState([]);
+  const [orderItems, setOrderItems] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showBillingMobile, setShowBillingMobile] = useState(false); // Toggle for mobile
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
-    axios
-      .get(`${BASE_URL}/dashboard/menu/itemall`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
-        setMenuItems(res.data);
-        setFilteredItems(res.data);
-      })
-      .catch((err) => console.error("Error fetching menu:", err));
+    const fetchCategory = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          return;
+        }
+
+        const response = await axios.get(
+          `${BASE_URL}/dashboard/menu/itemall`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setDishTypes(response.data);
+
+        const uniqueCategories = [
+          ...new Map(response.data.map((dish) => [dish.categoryId._id, dish.categoryId])).values(),
+        ];
+        if (uniqueCategories.length > 0) {
+          setSelectedCategoryId(uniqueCategories[0]._id);
+        }
+      } catch (error) {
+        console.log("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategory();
   }, []);
 
-  useEffect(() => {
-    const filtered = menuItems.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredItems(filtered);
-  }, [searchTerm, menuItems]);
-
-  const updateQty = (itemId, change) => {
-    setCart((prev) => {
-      const currentQty = prev[itemId]?.qty || 1;
-      const newQty = Math.max(1, currentQty + change);
-      return {
-        ...prev,
-        [itemId]: {
-          ...prev[itemId],
-          qty: newQty,
-        },
-      };
+  const handleAddToOrder = (dish) => {
+    setOrderItems((prevItems) => {
+      const existingItemIndex = prevItems.findIndex((item) => item._id === dish._id);
+      if (existingItemIndex >= 0) {
+        return prevItems.map((item, index) =>
+          index === existingItemIndex ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      } else {
+        return [...prevItems, { ...dish, quantity: 1 }];
+      }
     });
   };
 
-  const addToCart = (item) => {
-    setCart((prev) => ({
-      ...prev,
-      [item.id]: {
-        ...item,
-        qty: 1,
-      },
-    }));
-  };
+  const uniqueCategories = [
+    ...new Map(dishTypes.map((dish) => [dish.categoryId._id, dish.categoryId])).values(),
+  ];
+
+  const filteredDishes = dishTypes.filter((dish) => {
+    const matchesSearchQuery = dish.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const isAvailable = dish.available;
+
+    if (searchQuery) {
+      return matchesSearchQuery && isAvailable;
+    }
+
+    return (!selectedCategoryId || dish.categoryId?._id === selectedCategoryId) && isAvailable;
+  });
 
   return (
-    <div className="p-4 max-w-2xl mx-auto bg-white min-h-screen">
-      {/* Search Input */}
-      <input
-        type="text"
-        placeholder="Search items..."
-        className="w-full p-3 mb-4 rounded-md border border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+    <div className="flex flex-1 flex-col">
+      {/* Sidebar */}
+      <aside className="hidden w-56 flex-col border-r p-4 sm:flex dark:bg-[#1a1a1a] min-h-screen fixed">
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-[#4caf50]">Menu</h3>
+        </div>
+        <nav className="flex flex-col gap-2">
+          {uniqueCategories.map((category) => (
+            <React.Fragment key={category._id}>
+              <Button
+                variant="ghost"
+                className={`justify-start text-left text-[#333] ${selectedCategoryId === category._id
+                  ? "border-l-2 rounded-none border-[#4caf50] bg-[#e0e0e0] dark:text-[#ccc]"
+                  : "hover:bg-[#e0e0e0] dark:text-[#ccc] dark:hover:bg-[#333]"
+                  }`}
+                onClick={() => setSelectedCategoryId(category._id)}
+              >
+                {category.categoryName}
+              </Button>
+              <hr />
+            </React.Fragment>
+          ))}
+        </nav>
+      </aside>
 
-      {/* Menu List */}
-      <div className="space-y-3">
-        {filteredItems.map((item) => {
-          const isInCart = !!cart[item.id];
-          return (
-            <div
-              key={item.id}
-              className="flex flex-col sm:flex-row items-center justify-between border border-green-200 rounded-lg px-4 py-3 bg-green-50"
-            >
-              <span className="capitalize text-lg font-semibold text-green-800 mb-2 sm:mb-0">
-                {item.name}
-              </span>
-
-              <div className="flex items-center space-x-2">
-                {isInCart ? (
-                  <>
-                    <button
-                      onClick={() => updateQty(item.id, -1)}
-                      className="px-3 py-1 border rounded text-green-700 border-green-500 hover:bg-green-100"
-                    >
-                      −
-                    </button>
-
-                    <span className="w-6 text-center text-green-800">
-                      {cart[item.id].qty}
-                    </span>
-
-                    <button
-                      onClick={() => updateQty(item.id, 1)}
-                      className="px-3 py-1 border rounded text-green-700 border-green-500 hover:bg-green-100"
-                    >
-                      +
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => addToCart(item)}
-                    className="px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                  >
-                    Add
-                  </button>
-                )}
+      {/* Main content */}
+      <div className="md:ml-56 flex justify-between bg-[#f0f0f0] min-h-screen">
+        <div className="overflow-y-auto h-[93vh] bg-[#f0f0f0] w-full">
+          {/* Search bar */}
+          <div className="border-b-2">
+            <form className="mx-auto p-2">
+              <div className="relative flex items-center">
+                <Search className="absolute left-1.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="md:w-1/2 appearance-none bg-background pl-8 shadow-none"
+                />
               </div>
+            </form>
+          </div>
+
+          {/* Dish Cards */}
+          <main className="flex-1 p-4 relative sm:p-6 dark:bg-[#1a1a1a]">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {filteredDishes.map((dish) => (
+                <Card
+                  key={dish._id}
+                  className="bg-white dark:bg-[#333] hover:bg-[#7ad27d]  border-l-2 rounded-none border-l-[#4caf50] cursor-pointer"
+                  onClick={() => handleAddToOrder(dish)}
+                >
+                  <CardContent className="p-4">
+                    <h3 className="text-lg font-bold ">{dish.name}</h3>
+                    <p className="text-sm text-muted-foreground">₹{dish.price}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          );
-        })}
+          </main>
+        </div>
+
+        {/* Desktop Billing */}
+        <div className="md:flex hidden">
+          <OrdersBillingStaff orderItems={orderItems} setOrderItems={setOrderItems}/>
+        </div>
+      </div>
+
+      {/* Mobile Toggle Billing Drawer */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
+        <button
+          className="w-full bg-[#4caf50] text-white py-2 flex justify-center items-center"
+          onClick={() => setShowBillingMobile((prev) => !prev)}
+        >
+          {showBillingMobile ? (
+            <>
+              <ChevronDown className="mr-1" /> Hide Billing
+            </>
+          ) : (
+            <>
+              <ChevronUp className="mr-1" /> Show Billing
+            </>
+          )}
+        </button>
+        {showBillingMobile && (
+          <div className="bg-white dark:bg-[#1a1a1a] border-t border-gray-300 max-h-[80vh] ">
+            <OrdersBillingStaff orderItems={orderItems} setOrderItems={setOrderItems} />
+          </div>
+        )}
       </div>
     </div>
   );

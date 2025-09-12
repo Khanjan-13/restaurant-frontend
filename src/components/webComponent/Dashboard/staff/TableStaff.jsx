@@ -33,7 +33,7 @@ function TableStaff() {
   ); // Ensure fetchTables is stable to avoid unnecessary re-renders
 
   const handleTableClick = (tableId) => {
-    navigate("/Orders", { state: { tableId } });
+    navigate("/staff/menu", { state: { tableId } });
   };
   const handlePickupTableClick = (token) => {
     navigate("/Orders", { state: { token } });
