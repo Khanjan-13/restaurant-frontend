@@ -79,6 +79,7 @@ function DashboardMenuManage() {
           },
         });
         setMenuItems(response.data);
+        console.log(response.data)
       } catch (error) {
         console.log("Error fetching menu items: ", error);
         toast.error("Error fetching menu items.");
@@ -108,8 +109,8 @@ function DashboardMenuManage() {
   // Filter items based on the selected category
   const filteredItems = selectedCategory
     ? menuItems.filter(
-        (item) => item.categoryId?.categoryName === selectedCategory
-      )
+      (item) => item.categoryId?.categoryName === selectedCategory
+    )
     : menuItems;
   const handleItemEdit = async (id) => {
     try {
@@ -133,6 +134,7 @@ function DashboardMenuManage() {
 
       // Update state with the fetched data
       setupdateMenuItem(response.data);
+      console.log(response.data)
       setIsDialogOpen(true);
     } catch (error) {
       console.error("Error fetching item details:", error);
@@ -255,6 +257,8 @@ function DashboardMenuManage() {
                     <TableHead className="text-center p-2">Item</TableHead>
                     <TableHead className="text-center p-2">Category</TableHead>
                     <TableHead className="text-center p-2">Price</TableHead>
+                    <TableHead className="text-center p-2">Qty</TableHead>
+
                     <TableHead className="text-center p-2">Available</TableHead>
                     <TableHead className="text-center p-2">Actions</TableHead>
                   </TableRow>
@@ -279,6 +283,7 @@ function DashboardMenuManage() {
 
                       {/* Item Price */}
                       <TableCell className="p-2">{item.price}</TableCell>
+                      <TableCell className="p-2 text-center">{item.qty}</TableCell>
 
                       {/* Availability Switch */}
                       <TableCell className="p-2">
@@ -366,6 +371,14 @@ function DashboardMenuManage() {
               value={updateMenuItem.price || ""}
               onChange={updateInputHandler}
             />
+            <Input
+              type="number"
+              placeholder="Edit quantity"
+              name="qty"
+              value={updateMenuItem.qty || 0}
+              onChange={updateInputHandler}
+            />
+
             <div className="mt-4">
               <Button type="submit" className="bg-[#4caf50] hover:bg-[#419844]">
                 Save Changes
