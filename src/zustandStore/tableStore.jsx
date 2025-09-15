@@ -1,16 +1,8 @@
 import { create } from "zustand";
 import axios from "axios";
 
-// Dynamic API base URL selection
-const getBaseUrl = () => {
-  const apiMode = localStorage.getItem('apiMode') || 'online';
-  if (apiMode === 'local') {
-    return import.meta.env.VITE_API_BASE_URL_LOCAL;
-  }
-  return import.meta.env.VITE_API_BASE_URL_ONLINE;
-    // Removed duplicate declaration of apiMode
-};
-const BASE_URL = getBaseUrl();
+// Use only the online hosted backend URL
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export const useTableStore = create((set) => ({
   tables: [],
   groupedTables: {},
