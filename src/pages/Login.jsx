@@ -52,6 +52,28 @@ function Login() {
         toast.success("Welcome back! 🎉");
 
         localStorage.setItem("token", response.data.token);
+        try {
+          const parseJwt = (tkn) => {
+            try {
+              const base64Url = tkn.split(".")[1];
+              const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+              const jsonPayload = decodeURIComponent(
+                atob(base64)
+                  .split("")
+                  .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                  .join("")
+              );
+              return JSON.parse(jsonPayload);
+            } catch {
+              return {};
+            }
+          };
+          const decoded = parseJwt(response.data.token);
+          const existing = JSON.parse(localStorage.getItem("user") || "{}");
+          const inferredName = decoded?.name || decoded?.username || (formData.email ? formData.email.split('@')[0] : existing?.name);
+          const nextUser = { ...existing, name: inferredName, email: formData.email };
+          localStorage.setItem("user", JSON.stringify(nextUser));
+        } catch {}
         navigate("/dashboard");
       }
     } catch (error) {

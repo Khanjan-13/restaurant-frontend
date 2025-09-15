@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,33 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 function Navbar() {
+  const currentUser = useMemo(() => {
+    const token = localStorage.getItem("token");
+    const parseJwt = (tkn) => {
+      try {
+        const base64Url = tkn.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split("")
+            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .join("")
+        );
+        return JSON.parse(jsonPayload);
+      } catch {
+        return {};
+      }
+    };
+    const userObj = (() => {
+      try { return JSON.parse(localStorage.getItem("user") || "{}"); } catch { return {}; }
+    })();
+    const decoded = token ? parseJwt(token) : {};
+    return {
+      id: decoded?.id || decoded?._id || decoded?.adminId || userObj?._id || userObj?.id || null,
+      name: userObj?.name || decoded?.name || decoded?.username || "",
+      email: userObj?.email || decoded?.email || "",
+    };
+  }, []);
   const [isExpanded, setIsExpanded] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState({
     menu: false,
@@ -247,11 +274,13 @@ function Navbar() {
           <div className="border-t border-gray-200 p-4 bg-gradient-to-r from-green-50 to-green-100/30">
             <div className="flex items-center gap-3 rounded-lg bg-white/80 backdrop-blur-sm p-3 shadow-sm border border-green-200/50">
               <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center shadow-sm">
-                <span className="text-white text-xs font-semibold">A</span>
+                <span className="text-white text-xs font-semibold">
+                  {(currentUser?.name || currentUser?.email || "?").slice(0,1).toUpperCase()}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate text-gray-800">Admin User</p>
-                <p className="text-xs text-gray-600 truncate">admin@tastybites.com</p>
+                <p className="text-sm font-semibold truncate text-gray-800">{currentUser?.name || "User"}</p>
+                <p className="text-xs text-gray-600 truncate">{currentUser?.email || ""}</p>
               </div>
             </div>
           </div>

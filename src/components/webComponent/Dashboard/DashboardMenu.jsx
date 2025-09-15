@@ -43,19 +43,7 @@ function DashboardMenu() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Dynamic API base URL selection
-  // Default to local API for now
-  useEffect(() => {
-    localStorage.setItem('apiMode', 'local');
-  }, []);
-  const getBaseUrl = () => {
-    const apiMode = localStorage.getItem('apiMode') || 'local';
-    if (apiMode === 'local') {
-      return import.meta.env.VITE_API_BASE_URL_LOCAL;
-    }
-    return import.meta.env.VITE_API_BASE_URL_ONLINE;
-  };
-  const BASE_URL = getBaseUrl();
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     fetchCategories();
@@ -309,7 +297,7 @@ function DashboardMenu() {
         <div className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex h-20 items-center justify-between px-6">
             <div>
-              <h1 className="text-2xl font-semibold">Menu Management</h1>
+              <h1 className="text-2xl font-bold text-[#4caf50]">Menu Management</h1>
               <p className="text-sm text-muted-foreground">
                 Create and organize your restaurant menu categories and items
               </p>
@@ -396,9 +384,10 @@ function DashboardMenu() {
                     value={category.categoryName}
                     onChange={(e) => setCategory({ ...category, [e.target.name]: e.target.value })}
                     disabled={loading}
+                    className="border-border focus:border-[#4caf50] focus:ring-[#4caf50]"
                   />
                 </div>
-                <Button type="submit" disabled={loading} className="gap-2">
+                <Button type="submit" disabled={loading} className="gap-2 bg-[#4caf50] hover:bg-[#419844]">
                   <FontAwesomeIcon icon={faPlus} className="h-4 w-4" />
                   Add Category
                 </Button>
@@ -422,7 +411,7 @@ function DashboardMenu() {
                   <select
                     value={selectedCategory}
                     onChange={handleCategorySelect}
-                    className="w-full p-3 border rounded-lg bg-background"
+                    className="w-full p-3 border rounded-lg bg-background border-border focus:border-[#4caf50] focus:ring-[#4caf50]"
                     required
                   >
                     <option value="" disabled>
@@ -451,6 +440,7 @@ function DashboardMenu() {
                               onChange={(e) =>
                                 handleItemChange(index, "name", e.target.value)
                               }
+                              className="border-border focus:border-[#4caf50] focus:ring-[#4caf50]"
                             />
                           </div>
                           <div className="w-32">
@@ -461,6 +451,7 @@ function DashboardMenu() {
                               onChange={(e) =>
                                 handleItemChange(index, "quantity", e.target.value)
                               }
+                              className="border-border focus:border-[#4caf50] focus:ring-[#4caf50]"
                             />
                           </div>
                           <div className="w-32">
@@ -471,6 +462,7 @@ function DashboardMenu() {
                               onChange={(e) =>
                                 handleItemChange(index, "price", e.target.value)
                               }
+                              className="border-border focus:border-[#4caf50] focus:ring-[#4caf50]"
                             />
                           </div>
                           <Button
@@ -497,7 +489,7 @@ function DashboardMenu() {
                         <FontAwesomeIcon icon={faPlus} className="h-4 w-4" />
                         Add Another Item
                       </Button>
-                      <Button type="submit" disabled={loading} className="gap-2">
+                      <Button type="submit" disabled={loading} className="gap-2 bg-[#4caf50] hover:bg-[#419844]">
                         <FontAwesomeIcon icon={faUtensils} className="h-4 w-4" />
                         Save Items
                       </Button>

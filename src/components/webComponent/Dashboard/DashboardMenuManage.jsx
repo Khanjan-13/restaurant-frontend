@@ -9,18 +9,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-  faPenToSquare, 
-  faTrash, 
-  faSearch,
-  faFilter,
-  faUtensils,
-  faListDots,
-  faCookie,
-  faEye,
-  faToggleOn,
-  faToggleOff,
-} from "@fortawesome/free-solid-svg-icons";
+import { faPenToSquare, faTrash } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import toast from "react-hot-toast";
 import {
@@ -33,122 +22,119 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 
 function DashboardMenuManage() {
   const [menuItems, setMenuItems] = useState([]);
-  const [filteredItems, setFilteredItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
   const [updateMenuItem, setupdateMenuItem] = useState({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [availabilityFilter, setAvailabilityFilter] = useState("all");
-  
-  // Dynamic API base URL selection
-  useEffect(() => {
-    localStorage.setItem('apiMode', 'local');
-  }, []);
-  const getBaseUrl = () => {
-    const apiMode = localStorage.getItem('apiMode') || 'local';
-    if (apiMode === 'local') {
-      return import.meta.env.VITE_API_BASE_URL_LOCAL;
-    }
-    return import.meta.env.VITE_API_BASE_URL_ONLINE;
-  };
-  const BASE_URL = getBaseUrl();
-
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
-  useEffect(() => {
-    filterItems();
-  }, [menuItems, selectedCategory, searchQuery, availabilityFilter]);
-
-  const fetchItems = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("Authentication token is missing. Please log in again.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await axios.get(`${BASE_URL}/dashboard/menu/itemall`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setMenuItems(response.data);
-    } catch (error) {
-      console.error("Error fetching menu items:", error);
-      toast.error("Error fetching menu items.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterItems = () => {
-    let filtered = [...menuItems];
-
-    // Filter by category
-    if (selectedCategory) {
-      filtered = filtered.filter(
-        (item) => item.categoryId?.categoryName === selectedCategory
-      );
-    }
-
-    // Filter by search query
-    if (searchQuery) {
-      filtered = filtered.filter((item) =>
-        item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.categoryId?.categoryName?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Filter by availability
-    if (availabilityFilter !== "all") {
-      const isAvailable = availabilityFilter === "available";
-      filtered = filtered.filter((item) => item.available === isAvailable);
-    }
-
-    setFilteredItems(filtered);
-  };
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const updateAvailability = async (id, available) => {
+    console.log("Switch clicked:", { id, available }); // Log the click action
+
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token"); // Retrieve token for authentication
+
+      // Send the request to update item availability
       const response = await axios.put(
         `${BASE_URL}/dashboard/menu/itemSwitchUpdate/${id}`,
-        { available: !available },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { available: !available }, // Send the toggled value
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include token in the headers
+          },
+        }
       );
 
+      // Log the successful API response
+      console.log("API Response:", response.data);
+
+      // Update the local state to reflect the new availability
       setMenuItems((prevItems) =>
         prevItems.map((item) =>
           item._id === id ? { ...item, available: !available } : item
         )
       );
-
-      toast.success(`Item ${!available ? 'enabled' : 'disabled'} successfully`);
     } catch (error) {
+      // Log the error if the API call fails
       console.error("Error updating availability:", error);
-      toast.error("Failed to update item availability");
     }
   };
 
-  const handleItemEdit = async (id) => {
-    try {
+  useEffect(() => {
+    const fetchItems = async () => {
       const token = localStorage.getItem("token");
+
+      // Check if the token is missing
       if (!token) {
         toast.error("Authentication token is missing. Please log in again.");
         return;
       }
 
-      const response = await axios.get(`${BASE_URL}/dashboard/menu/item/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      try {
+        const response = await axios.get(`${BASE_URL}/dashboard/menu/itemall`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setMenuItems(response.data);
+        console.log(response.data)
+      } catch (error) {
+        console.log("Error fetching menu items: ", error);
+        toast.error("Error fetching menu items.");
+      }
+    };
 
+    fetchItems();
+  }, []); // Empty dependency array to fetch items once on mount
+
+  const updateInputHandler = (e) => {
+    const { name, value } = e.target;
+    setupdateMenuItem((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
+  const handleFilterChange = (e) => {
+    setSelectedCategory(e.target.value);
+  };
+
+  // Derive unique categories from the menu items
+  const uniqueCategories = Array.from(
+    new Set(menuItems.map((item) => item.categoryId?.categoryName)) // Added optional chaining for safety
+  );
+
+  // Filter items based on the selected category
+  const filteredItems = selectedCategory
+    ? menuItems.filter(
+      (item) => item.categoryId?.categoryName === selectedCategory
+    )
+    : menuItems;
+  const handleItemEdit = async (id) => {
+    try {
+      // Retrieve the authentication token from localStorage
+      const token = localStorage.getItem("token");
+
+      // Check if the token is missing
+      if (!token) {
+        toast.error("Authentication token is missing. Please log in again.");
+        return;
+      }
+      // Fetch item details from the server
+      const response = await axios.get(
+        `${BASE_URL}/dashboard/menu/item/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Update state with the fetched data
       setupdateMenuItem(response.data);
+      console.log(response.data)
       setIsDialogOpen(true);
     } catch (error) {
       console.error("Error fetching item details:", error);
@@ -158,412 +144,285 @@ function DashboardMenuManage() {
 
   const submitItemForm = async (e) => {
     e.preventDefault();
-    if (!updateMenuItem.name?.trim()) {
-      toast.error("Item name cannot be empty.");
-      return;
-    }
-    if (!updateMenuItem.price || updateMenuItem.price <= 0) {
-      toast.error("Please enter a valid price.");
-      return;
-    }
-    if (!updateMenuItem.quantity || updateMenuItem.quantity <= 0) {
-      toast.error("Please enter a valid quantity.");
-      return;
-    }
-
     try {
+      // Retrieve the authentication token from localStorage
       const token = localStorage.getItem("token");
+
+      // Check if the token is missing
       if (!token) {
         toast.error("Authentication token is missing. Please log in again.");
         return;
       }
-      console.log(updateMenuItem);
       const response = await axios.put(
         `${BASE_URL}/dashboard/menu/itemupdate/${updateMenuItem._id}`,
         updateMenuItem,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      console.log(response);
-      toast.success(response.data.message || "Item updated successfully");
-      fetchItems();
+      toast.success(response.data.message, {
+        style: {
+          marginTop: "40px",
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
+        },
+      });
+      // Fetch updated items
+      const fetchItem = async () => {
+        try {
+          const response = await axios.get(
+            `${BASE_URL}/dashboard/menu/itemall`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          setMenuItems(response.data);
+        } catch (error) {
+          console.log("Error Fetching: ", error);
+          toast.error("Error fetching menu items.");
+        }
+      };
+      fetchItem();
       setIsDialogOpen(false);
     } catch (error) {
-      console.error("Error updating item:", error);
+      console.log(error);
       toast.error("Error updating item.");
     }
   };
 
   const handleDeleteItem = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this menu item?")) {
-      return;
-    }
-
     try {
+      // Retrieve the authentication token from localStorage
       const token = localStorage.getItem("token");
+
+      // Check if the token is missing
       if (!token) {
         toast.error("Authentication token is missing. Please log in again.");
         return;
       }
-
-      const response = await axios.delete(`${BASE_URL}/dashboard/menu/itemdelete/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await axios.delete(
+        `${BASE_URL}/dashboard/menu/itemdelete/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success(response.data.message, {
+        style: {
+          marginTop: "40px",
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
+        },
       });
-
-      toast.success(response.data.message || "Item deleted successfully");
-      setMenuItems(menuItems.filter((item) => item._id !== id));
+      setMenuItems(menuItems.filter((item) => item._id !== id)); // Update state after deletion
     } catch (error) {
-      console.error("Error deleting item:", error);
+      console.log("Error deleting item");
       toast.error("Error deleting item.");
     }
   };
 
-  const clearFilters = () => {
-    setSelectedCategory("");
-    setSearchQuery("");
-    setAvailabilityFilter("all");
-  };
-
-  // Get unique categories
-  const uniqueCategories = Array.from(
-    new Set(menuItems.map((item) => item.categoryId?.categoryName))
-  ).filter(Boolean);
-
-  // Calculate stats
-  const stats = {
-    totalItems: menuItems.length,
-    availableItems: menuItems.filter(item => item.available).length,
-    unavailableItems: menuItems.filter(item => !item.available).length,
-    categories: uniqueCategories.length,
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex-1 lg:pl-72 pl-0">
-        {/* Header */}
-        <div className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex h-20 items-center justify-between px-6">
-            <div>
-              <h1 className="text-2xl font-semibold">Menu Items Management</h1>
-              <p className="text-sm text-muted-foreground">
-                Manage your restaurant's menu items and availability
-              </p>
-            </div>
-            <Button onClick={fetchItems} variant="outline" disabled={loading}>
-              <FontAwesomeIcon icon={faUtensils} className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
-        </div>
-
-        {/* Dashboard Content */}
-        <div className="p-6 space-y-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card className="border shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Items</p>
-                    <h3 className="text-2xl font-bold mt-2">{stats.totalItems}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <FontAwesomeIcon icon={faUtensils} className="h-6 w-6 text-blue-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Available</p>
-                    <h3 className="text-2xl font-bold mt-2">{stats.availableItems}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                    <FontAwesomeIcon icon={faToggleOn} className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Unavailable</p>
-                    <h3 className="text-2xl font-bold mt-2">{stats.unavailableItems}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-                    <FontAwesomeIcon icon={faToggleOff} className="h-6 w-6 text-red-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Categories</p>
-                    <h3 className="text-2xl font-bold mt-2">{stats.categories}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
-                    <FontAwesomeIcon icon={faListDots} className="h-6 w-6 text-purple-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Filters */}
-          <Card className="border shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex-1 min-w-[300px]">
-                  <div className="relative">
-                    <FontAwesomeIcon 
-                      icon={faSearch} 
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" 
-                    />
-                    <Input
-                      placeholder="Search by item name or category..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="rounded-lg border border-input bg-background px-3 py-2 text-sm min-w-[150px]"
-                >
-                  <option value="">All Categories</option>
-                  {uniqueCategories.map((categoryName) => (
-                    <option key={categoryName} value={categoryName}>
-                      {categoryName}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={availabilityFilter}
-                  onChange={(e) => setAvailabilityFilter(e.target.value)}
-                  className="rounded-lg border border-input bg-background px-3 py-2 text-sm min-w-[130px]"
-                >
-                  <option value="all">All Items</option>
-                  <option value="available">Available Only</option>
-                  <option value="unavailable">Unavailable Only</option>
-                </select>
-
-                {(selectedCategory || searchQuery || availabilityFilter !== "all") && (
-                  <Button variant="outline" size="sm" onClick={clearFilters}>
-                    Clear Filters
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Menu Items Table */}
-          <Card className="border shadow-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
+    <div>
+      <div className="flex ml-56 min-h-screen flex-col bg-muted/40 pt-5">
+        <main className="grid flex-1 items-start mx-20 md:mx-30 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+          <Card className="rounded-none border-border shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <CardTitle className="flex justify-between items-center text-lg font-bold w-full">
+                <div className="text-[#4caf50]">Menu Management</div>
                 <div>
-                  <CardTitle className="text-lg">Menu Items</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {filteredItems.length} of {menuItems.length} items
-                  </p>
+                  <select
+                    className="p-2 border border-border rounded-md text-sm bg-background focus:border-[#4caf50] focus:ring-[#4caf50]"
+                    aria-label="Filter by category"
+                    value={selectedCategory}
+                    onChange={handleFilterChange}
+                  >
+                    <option value="">Filter by Category</option>
+                    {uniqueCategories.map((categoryName) => (
+                      <option key={categoryName} value={categoryName}>
+                        {categoryName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </div>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center py-8">
-                  <FontAwesomeIcon icon={faUtensils} className="h-8 w-8 text-muted-foreground animate-spin mb-2" />
-                  <p className="text-muted-foreground">Loading menu items...</p>
-                </div>
-              ) : filteredItems.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Item Name</TableHead>
-                        <TableHead>Quantity</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead className="text-right">Price</TableHead>
-                        <TableHead className="text-center">Available</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="text-center p-3 font-semibold text-foreground">Sr. No.</TableHead>
+                    <TableHead className="text-center p-3 font-semibold text-foreground">Item</TableHead>
+                    <TableHead className="text-center p-3 font-semibold text-foreground">Category</TableHead>
+                    <TableHead className="text-center p-3 font-semibold text-foreground">Price</TableHead>
+                    <TableHead className="text-center p-3 font-semibold text-foreground">Qty</TableHead>
+                    <TableHead className="text-center p-3 font-semibold text-foreground">Available</TableHead>
+                    <TableHead className="text-center p-3 font-semibold text-foreground">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredItems.map((item, index) => (
+                    <TableRow key={item._id} className="hover:bg-muted/30 transition-colors duration-200">
+                      {/* Serial Number */}
+                      <TableCell className="text-center p-3 text-muted-foreground">
+                        {index + 1}
+                      </TableCell>
 
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredItems.map((item, index) => (
-                        <TableRow key={item._id} className="hover:bg-muted/50 transition-colors">
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center relative">
-                            <FontAwesomeIcon icon={faUtensils} className="h-4 w-4 text-muted-foreground" />
-                            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-medium">
-                                  {index + 1}
-                            </span>
+                      {/* Item Name */}
+                      <TableCell className="font-semibold p-3 text-foreground">
+                        {item.name}
+                      </TableCell>
 
-                              </div>
-                              <div>
-                                <p className="font-medium">{item.name}</p>
-                                <p className="text-sm text-muted-foreground">#{index + 1}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                              {item.quantity}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                              {item.categoryId?.categoryName}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right font-semibold">
-                            ₹{item.price}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex items-center justify-center">
-                              <Switch
-                                checked={item.available}
-                                onCheckedChange={() =>
-                                  updateAvailability(item._id, item.available)
-                                }
-                                className="data-[state=checked]:bg-green-500"
-                              />
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleItemEdit(item._id)}
-                              >
-                                <FontAwesomeIcon icon={faPenToSquare} className="h-3 w-3 mr-1" />
-                                Edit
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleDeleteItem(item._id)}
-                              >
-                                <FontAwesomeIcon icon={faTrash} className="h-3 w-3 mr-1" />
-                                Delete
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <FontAwesomeIcon icon={faCookie} className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">
-                    {searchQuery || selectedCategory || availabilityFilter !== "all"
-                      ? "No items match your filters"
-                      : "No menu items found. Add some items to get started."
-                    }
-                  </p>
-                  {(searchQuery || selectedCategory || availabilityFilter !== "all") && (
-                    <Button variant="outline" size="sm" className="mt-2" onClick={clearFilters}>
-                      Clear filters to see all items
-                    </Button>
-                  )}
-                </div>
-              )}
+                      {/* Category Name */}
+                      <TableCell className="p-3 text-muted-foreground">
+                        {item.categoryId?.categoryName}
+                      </TableCell>
+
+                      {/* Item Price */}
+                      <TableCell className="p-3 font-semibold text-[#4caf50]">₹{item.price}</TableCell>
+                      <TableCell className="p-3 text-center text-foreground">{item.qty}</TableCell>
+
+                      {/* Availability Switch */}
+                      <TableCell className="p-3 text-center">
+                        <Switch
+                          checked={item.available}
+                          onClick={() => updateAvailability(item._id, item.available)}
+                          className="data-[state=checked]:bg-[#4caf50]"
+                        />
+                      </TableCell>
+
+                      {/* Edit and Delete Buttons */}
+                      <TableCell className="p-3">
+                        <div className="flex gap-2 justify-center">
+                          {/* Edit Button */}
+                          <button
+                            className="bg-[#4caf50] hover:bg-[#419844] p-2 text-white rounded-md transition-colors duration-200 shadow-sm"
+                            onClick={() => handleItemEdit(item._id)}
+                            title="Edit Item"
+                          >
+                            <FontAwesomeIcon
+                              icon={faPenToSquare}
+                              className="h-4 w-4"
+                            />
+                          </button>
+
+                          {/* Delete Button */}
+                          <button
+                            className="bg-red-500 hover:bg-red-600 p-2 text-white rounded-md transition-colors duration-200 shadow-sm"
+                            onClick={() => handleDeleteItem(item._id)}
+                            title="Delete Item"
+                          >
+                            <FontAwesomeIcon icon={faTrash} className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
-        </div>
+        </main>
       </div>
-
-      {/* Edit Item Dialog */}
+      {/* Dialog for Editing Menu Items */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Menu Item</DialogTitle>
+            <DialogTitle className="text-[#4caf50] font-bold">Edit Menu Item</DialogTitle>
             <DialogDescription>
-              Update the item details below.
+              Make changes to the menu item below and save your updates.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={submitItemForm} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Category</label>
+          <form onSubmit={submitItemForm} className="flex flex-col gap-4">
+            <div className="space-y-2">
+              <label htmlFor="category" className="text-sm font-medium text-foreground">
+                Category
+              </label>
               <select
+                id="category"
                 name="categoryId"
                 value={updateMenuItem.categoryId || ""}
-                onChange={(e) => setupdateMenuItem({ ...updateMenuItem, categoryId: e.target.value })}
-                className="w-full p-3 border rounded-lg bg-background"
-                required
+                onChange={updateInputHandler}
+                className="w-full p-3 border border-border rounded-md bg-background focus:border-[#4caf50] focus:ring-[#4caf50]"
               >
-                <option value="">Select Category</option>
                 {uniqueCategories.map((categoryName) => {
                   const category = menuItems.find(
-                    (item) => item.categoryId?.categoryName === categoryName
+                    (item) => item.categoryId.categoryName === categoryName
                   );
                   return (
                     <option
-                      key={category?.categoryId?._id}
-                      value={category?.categoryId?._id}
+                      key={category.categoryId._id}
+                      value={category.categoryId._id}
                     >
-                      {category?.categoryId?.categoryName}
+                      {category.categoryId.categoryName}
                     </option>
                   );
                 })}
               </select>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Item Name</label>
+            
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium text-foreground">
+                Item Name
+              </label>
               <Input
+                id="name"
                 type="text"
                 placeholder="Enter item name"
                 name="name"
                 value={updateMenuItem.name || ""}
-                onChange={(e) => setupdateMenuItem({ ...updateMenuItem, name: e.target.value })}
-                required
+                onChange={updateInputHandler}
+                className="border-border focus:border-[#4caf50] focus:ring-[#4caf50]"
               />
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Price (₹)</label>
+            
+            <div className="space-y-2">
+              <label htmlFor="price" className="text-sm font-medium text-foreground">
+                Price (₹)
+              </label>
               <Input
+                id="price"
                 type="number"
                 placeholder="Enter price"
                 name="price"
-                min="1"
-                step="0.01"
                 value={updateMenuItem.price || ""}
-                onChange={(e) => setupdateMenuItem({ ...updateMenuItem, price: e.target.value })}
-                required
+                onChange={updateInputHandler}
+                className="border-border focus:border-[#4caf50] focus:ring-[#4caf50]"
               />
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Quantity</label>
+            
+            <div className="space-y-2">
+              <label htmlFor="qty" className="text-sm font-medium text-foreground">
+                Quantity
+              </label>
               <Input
+                id="qty"
                 type="number"
                 placeholder="Enter quantity"
-                name="quantity"
-                min="1"
-                step="0.01"
-                value={updateMenuItem.quantity || ""}
-                onChange={(e) => setupdateMenuItem({ ...updateMenuItem, quantity: e.target.value })}
-                required
+                name="qty"
+                value={updateMenuItem.qty || 0}
+                onChange={updateInputHandler}
+                className="border-border focus:border-[#4caf50] focus:ring-[#4caf50]"
               />
             </div>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+
+            <div className="mt-4 flex gap-3">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setIsDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button type="submit">Save Changes</Button>
+              <Button 
+                type="submit" 
+                className="flex-1 bg-[#4caf50] hover:bg-[#419844] text-white font-semibold"
+              >
+                Save Changes
+              </Button>
             </div>
           </form>
         </DialogContent>

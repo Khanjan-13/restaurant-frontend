@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -28,20 +27,14 @@ import {
   faEye,
   faXmark,
   faUsers,
-  faUserFriends,
-  faUserTie,
   faUser,
   faPercent,
   faPhone,
   faEnvelope,
   faMapMarkerAlt,
-  faBirthdayCake,
-  faStar,
   faCrown,
-  faHeart,
   faGift,
   faUserPlus,
-  faUserEdit,
   faUserCheck,
   faUserTimes,
 } from "@fortawesome/free-solid-svg-icons";
@@ -53,7 +46,7 @@ function DashboardCustomers() {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -66,11 +59,9 @@ function DashboardCustomers() {
     phone: "",
     email: "",
     address: "",
-    birthday: "",
-    category: "regular", // regular, family, friend, vip
-    discountPercentage: 0,
-    isActive: true,
-    notes: ""
+    status: "active",
+    discount: 0,
+    notes: "",
   });
   
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -81,7 +72,7 @@ function DashboardCustomers() {
 
   useEffect(() => {
     filterCustomers();
-  }, [customers, selectedFilter, searchQuery, categoryFilter]);
+  }, [customers, selectedFilter, searchQuery, statusFilter]);
 
   const fetchCustomers = async () => {
     setLoading(true);
@@ -91,13 +82,21 @@ function DashboardCustomers() {
         throw new Error("Authentication token is missing. Please log in again.");
       }
 
-      const response = await axios.get(`${BASE_URL}/dashboard/customers`, {
+      const response = await axios.get(`${BASE_URL}/api/customers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.data) {
-        setCustomers(response.data);
-        setFilteredCustomers(response.data);
+        const raw = response.data;
+        const list = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.data)
+            ? raw.data
+            : Array.isArray(raw?.customers)
+              ? raw.customers
+              : [];
+        setCustomers(list);
+        setFilteredCustomers(list);
       } else {
         setCustomers([]);
         setFilteredCustomers([]);
@@ -119,12 +118,40 @@ function DashboardCustomers() {
         throw new Error("Authentication token is missing. Please log in again.");
       }
 
+      // Safely decode JWT to extract user id for createdBy
+      const parseJwt = (tkn) => {
+        try {
+          const base64Url = tkn.split(".")[1];
+          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split("")
+              .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+              .join("")
+          );
+          return JSON.parse(jsonPayload);
+        } catch (err) {
+          return {};
+        }
+      };
+      const decoded = parseJwt(token);
+      const localUser = (() => {
+        try { return JSON.parse(localStorage.getItem("user") || "{}"); } catch { return {}; }
+      })();
+      const createdBy = decoded?.id || decoded?.adminId || decoded?._id || localUser?._id || localUser?.id || null;
+
       const customerData = {
-        ...customerForm,
-        discountPercentage: parseFloat(customerForm.discountPercentage)
+        name: customerForm.name,
+        phone: customerForm.phone,
+        email: customerForm.email,
+        address: customerForm.address,
+        notes: customerForm.notes,
+        status: customerForm.status || "active",
+        discount: Number(customerForm.discount) || 0,
+        createdBy,
       };
 
-      const response = await axios.post(`${BASE_URL}/dashboard/customers`, customerData, {
+      const response = await axios.post(`${BASE_URL}/api/customers`, customerData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -149,11 +176,16 @@ function DashboardCustomers() {
       }
 
       const customerData = {
-        ...customerForm,
-        discountPercentage: parseFloat(customerForm.discountPercentage)
+        name: customerForm.name,
+        phone: customerForm.phone,
+        email: customerForm.email,
+        address: customerForm.address,
+        notes: customerForm.notes,
+        status: customerForm.status || "active",
+        discount: Number(customerForm.discount) || 0,
       };
 
-      const response = await axios.put(`${BASE_URL}/dashboard/customers/${editingCustomer._id}`, customerData, {
+      const response = await axios.put(`${BASE_URL}/api/customers/${editingCustomer._id}`, customerData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -181,7 +213,7 @@ function DashboardCustomers() {
         throw new Error("Authentication token is missing. Please log in again.");
       }
 
-      const response = await axios.delete(`${BASE_URL}/dashboard/customers/${customerId}`, {
+      const response = await axios.delete(`${BASE_URL}/api/customers/${customerId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -202,10 +234,8 @@ function DashboardCustomers() {
       phone: customer.phone,
       email: customer.email,
       address: customer.address,
-      birthday: customer.birthday,
-      category: customer.category,
-      discountPercentage: customer.discountPercentage,
-      isActive: customer.isActive,
+      status: customer.status || "active",
+      discount: customer.discount || 0,
       notes: customer.notes
     });
     setIsEditDialogOpen(true);
@@ -217,45 +247,38 @@ function DashboardCustomers() {
       phone: "",
       email: "",
       address: "",
-      birthday: "",
-      category: "regular",
-      discountPercentage: 0,
-      isActive: true,
-      notes: ""
+      status: "active",
+      discount: 0,
+      notes: "",
     });
   };
 
   const filterCustomers = () => {
-    let filtered = [...customers];
+    const source = Array.isArray(customers) ? customers : [];
+    let filtered = [...source];
 
-    // Filter by category
-    if (categoryFilter) {
-      filtered = filtered.filter(customer => customer.category === categoryFilter);
+    // Filter by status selector
+    if (statusFilter) {
+      filtered = filtered.filter(customer => customer.status === statusFilter);
     }
 
-    // Filter by status
+    // Extra filter (discount only)
     if (selectedFilter) {
       switch (selectedFilter) {
-        case "active":
-          filtered = filtered.filter(customer => customer.isActive);
-          break;
-        case "inactive":
-          filtered = filtered.filter(customer => !customer.isActive);
-          break;
         case "discount":
-          filtered = filtered.filter(customer => customer.discountPercentage > 0);
+          filtered = filtered.filter(customer => (customer.discount || 0) > 0);
           break;
       }
     }
 
     // Filter by search query
     if (searchQuery) {
-      filtered = filtered.filter(
-        (customer) =>
-          customer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          customer.phone?.includes(searchQuery) ||
-          customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          customer.category?.toLowerCase().includes(searchQuery.toLowerCase())
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter((customer) =>
+        customer.name?.toLowerCase().includes(q) ||
+        customer.phone?.includes(searchQuery) ||
+        customer.email?.toLowerCase().includes(q) ||
+        customer.status?.toLowerCase().includes(q)
       );
     }
 
@@ -265,7 +288,7 @@ function DashboardCustomers() {
   const clearFilters = () => {
     setSelectedFilter("");
     setSearchQuery("");
-    setCategoryFilter("");
+    setStatusFilter("");
   };
 
   const getCategoryBadge = (category) => {
@@ -307,11 +330,11 @@ function DashboardCustomers() {
   // Calculate stats
   const stats = {
     total: filteredCustomers.length,
-    active: filteredCustomers.filter(customer => customer.isActive).length,
-    family: filteredCustomers.filter(customer => customer.category === 'family').length,
-    friends: filteredCustomers.filter(customer => customer.category === 'friend').length,
-    vip: filteredCustomers.filter(customer => customer.category === 'vip').length,
-    withDiscount: filteredCustomers.filter(customer => customer.discountPercentage > 0).length
+    active: filteredCustomers.filter(customer => customer.status === 'active').length,
+    inactive: filteredCustomers.filter(customer => customer.status === 'inactive').length,
+    vip: filteredCustomers.filter(customer => customer.status === 'vip').length,
+    banned: filteredCustomers.filter(customer => customer.status === 'banned').length,
+    withDiscount: filteredCustomers.filter(customer => (customer.discount || 0) > 0).length
   };
 
   return (
@@ -323,7 +346,7 @@ function DashboardCustomers() {
             <div>
               <h1 className="text-2xl font-semibold">Customer Management</h1>
               <p className="text-sm text-muted-foreground">
-                Manage customer details and discount preferences
+                Manage customer details, status and discounts
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -384,25 +407,11 @@ function DashboardCustomers() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Family</p>
-                    <h3 className="text-2xl font-bold mt-2">{stats.family}</h3>
+                    <p className="text-sm font-medium text-muted-foreground">Inactive</p>
+                    <h3 className="text-2xl font-bold mt-2">{stats.inactive}</h3>
                   </div>
-                  <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-                    <FontAwesomeIcon icon={faHeart} className="h-6 w-6 text-red-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border shadow-sm bg-gradient-to-br from-background to-muted/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Friends</p>
-                    <h3 className="text-2xl font-bold mt-2">{stats.friends}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <FontAwesomeIcon icon={faUserFriends} className="h-6 w-6 text-blue-600" />
+                  <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                    <FontAwesomeIcon icon={faUserTimes} className="h-6 w-6 text-gray-600" />
                   </div>
                 </div>
               </CardContent>
@@ -417,6 +426,20 @@ function DashboardCustomers() {
                   </div>
                   <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
                     <FontAwesomeIcon icon={faCrown} className="h-6 w-6 text-purple-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border shadow-sm bg-gradient-to-br from-background to-muted/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Banned</p>
+                    <h3 className="text-2xl font-bold mt-2">{stats.banned}</h3>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <FontAwesomeIcon icon={faUserTimes} className="h-6 w-6 text-red-600" />
                   </div>
                 </div>
               </CardContent>
@@ -448,7 +471,7 @@ function DashboardCustomers() {
                       className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4"
                     />
                     <Input
-                      placeholder="Search by name, phone, email, or category..."
+                      placeholder="Search by name, phone, email, or status..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10"
@@ -457,29 +480,27 @@ function DashboardCustomers() {
                 </div>
 
                 <select
-                  value={selectedFilter}
-                  onChange={(e) => setSelectedFilter(e.target.value)}
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
                   className="rounded-lg border border-input bg-background px-3 py-2 text-sm min-w-[140px]"
                 >
                   <option value="">All Status</option>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
-                  <option value="discount">With Discount</option>
+                  <option value="vip">VIP</option>
+                  <option value="banned">Banned</option>
                 </select>
 
                 <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  value={selectedFilter}
+                  onChange={(e) => setSelectedFilter(e.target.value)}
                   className="rounded-lg border border-input bg-background px-3 py-2 text-sm min-w-[140px]"
                 >
-                  <option value="">All Categories</option>
-                  <option value="regular">Regular</option>
-                  <option value="family">Family</option>
-                  <option value="friend">Friend</option>
-                  <option value="vip">VIP</option>
+                  <option value="">All</option>
+                  <option value="discount">With Discount</option>
                 </select>
 
-                {(selectedFilter || searchQuery || categoryFilter) && (
+                {(selectedFilter || searchQuery || statusFilter) && (
                   <Button variant="outline" size="sm" onClick={clearFilters}>
                     <FontAwesomeIcon icon={faXmark} className="h-4 w-4 mr-2" />
                     Clear Filters
@@ -514,7 +535,6 @@ function DashboardCustomers() {
                     <TableRow>
                       <TableHead>Customer</TableHead>
                       <TableHead>Contact</TableHead>
-                      <TableHead>Category</TableHead>
                       <TableHead>Discount</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Actions</TableHead>
@@ -523,7 +543,7 @@ function DashboardCustomers() {
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">
+                        <TableCell colSpan={5} className="text-center py-8">
                           <div className="flex items-center justify-center gap-2">
                             <FontAwesomeIcon icon={faRefresh} className="h-4 w-4 animate-spin" />
                             Loading customers...
@@ -554,20 +574,17 @@ function DashboardCustomers() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            {getCategoryBadge(customer.category)}
-                          </TableCell>
-                          <TableCell>
-                            {customer.discountPercentage > 0 ? (
+                            {(customer.discount || 0) > 0 ? (
                               <div className="flex items-center gap-2">
                                 <FontAwesomeIcon icon={faPercent} className="h-3 w-3 text-green-600" />
-                                <span className="font-semibold text-green-600">{customer.discountPercentage}%</span>
+                                <span className="font-semibold text-green-600">{customer.discount}%</span>
                               </div>
                             ) : (
                               <span className="text-muted-foreground text-sm">No discount</span>
                             )}
                           </TableCell>
                           <TableCell>
-                            {getStatusBadge(customer)}
+                            {getStatusBadge(customer.status)}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
@@ -604,11 +621,11 @@ function DashboardCustomers() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">
+                        <TableCell colSpan={5} className="text-center py-8">
                           <div className="flex flex-col items-center gap-2">
                             <FontAwesomeIcon icon={faUsers} className="h-8 w-8 text-muted-foreground" />
                             <p className="text-muted-foreground">No customers found</p>
-                            {(selectedFilter || searchQuery || categoryFilter) && (
+                            {(selectedFilter || searchQuery || statusFilter) && (
                               <Button variant="outline" size="sm" onClick={clearFilters}>
                                 Clear filters to see all customers
                               </Button>
@@ -656,26 +673,16 @@ function DashboardCustomers() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Category</p>
-                  <div className="mt-1">{getCategoryBadge(selectedCustomer.category)}</div>
+                  <p className="text-sm font-medium text-muted-foreground">Status</p>
+                  <div className="mt-1">{getStatusBadge(selectedCustomer.status)}</div>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Discount</p>
                   <p className="text-sm font-semibold">
-                    {selectedCustomer.discountPercentage > 0 ? `${selectedCustomer.discountPercentage}%` : "No discount"}
+                    {(selectedCustomer.discount || 0) > 0 ? `${selectedCustomer.discount}%` : "No discount"}
                   </p>
                 </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Status</p>
-                <div className="mt-1">{getStatusBadge(selectedCustomer)}</div>
-              </div>
-              {selectedCustomer.birthday && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Birthday</p>
-                  <p className="text-sm">{selectedCustomer.birthday}</p>
-                </div>
-              )}
               {selectedCustomer.notes && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Notes</p>
@@ -743,56 +750,38 @@ function DashboardCustomers() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="category">Category *</Label>
+                <Label htmlFor="status">Status *</Label>
                 <Select
-                  value={customerForm.category}
-                  onValueChange={(value) => setCustomerForm({...customerForm, category: value})}
+                  value={customerForm.status}
+                  onValueChange={(value) => setCustomerForm({...customerForm, status: value})}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="regular">Regular</SelectItem>
-                    <SelectItem value="family">Family</SelectItem>
-                    <SelectItem value="friend">Friend</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
                     <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="banned">Banned</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="discountPercentage">Discount (%)</Label>
+                <Label htmlFor="discount">Discount (%)</Label>
                 <Input
-                  id="discountPercentage"
+                  id="discount"
                   type="number"
                   min="0"
                   max="100"
                   step="0.1"
-                  value={customerForm.discountPercentage}
-                  onChange={(e) => setCustomerForm({...customerForm, discountPercentage: e.target.value})}
+                  value={customerForm.discount}
+                  onChange={(e) => setCustomerForm({...customerForm, discount: e.target.value})}
                   placeholder="0"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="birthday">Birthday</Label>
-                <Input
-                  id="birthday"
-                  type="date"
-                  value={customerForm.birthday}
-                  onChange={(e) => setCustomerForm({...customerForm, birthday: e.target.value})}
-                />
-              </div>
-              <div className="flex items-center space-x-2 pt-6">
-                <Switch
-                  id="isActive"
-                  checked={customerForm.isActive}
-                  onCheckedChange={(checked) => setCustomerForm({...customerForm, isActive: checked})}
-                />
-                <Label htmlFor="isActive">Active Customer</Label>
-              </div>
-            </div>
+            {/* No birthday or isActive in schema */}
 
             <div>
               <Label htmlFor="notes">Notes</Label>
@@ -876,56 +865,38 @@ function DashboardCustomers() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-category">Category *</Label>
+                <Label htmlFor="edit-status">Status *</Label>
                 <Select
-                  value={customerForm.category}
-                  onValueChange={(value) => setCustomerForm({...customerForm, category: value})}
+                  value={customerForm.status}
+                  onValueChange={(value) => setCustomerForm({...customerForm, status: value})}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="regular">Regular</SelectItem>
-                    <SelectItem value="family">Family</SelectItem>
-                    <SelectItem value="friend">Friend</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
                     <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="banned">Banned</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="edit-discountPercentage">Discount (%)</Label>
+                <Label htmlFor="edit-discount">Discount (%)</Label>
                 <Input
-                  id="edit-discountPercentage"
+                  id="edit-discount"
                   type="number"
                   min="0"
                   max="100"
                   step="0.1"
-                  value={customerForm.discountPercentage}
-                  onChange={(e) => setCustomerForm({...customerForm, discountPercentage: e.target.value})}
+                  value={customerForm.discount}
+                  onChange={(e) => setCustomerForm({...customerForm, discount: e.target.value})}
                   placeholder="0"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-birthday">Birthday</Label>
-                <Input
-                  id="edit-birthday"
-                  type="date"
-                  value={customerForm.birthday}
-                  onChange={(e) => setCustomerForm({...customerForm, birthday: e.target.value})}
-                />
-              </div>
-              <div className="flex items-center space-x-2 pt-6">
-                <Switch
-                  id="edit-isActive"
-                  checked={customerForm.isActive}
-                  onCheckedChange={(checked) => setCustomerForm({...customerForm, isActive: checked})}
-                />
-                <Label htmlFor="edit-isActive">Active Customer</Label>
-              </div>
-            </div>
+            {/* No birthday or isActive in schema */}
 
             <div>
               <Label htmlFor="edit-notes">Notes</Label>

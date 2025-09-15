@@ -51,19 +51,7 @@ function AddStaff() {
   const [deleteId, setDeleteId] = useState(null);
   const [loading, setLoading] = useState(false);
   
-  // Dynamic API base URL selection
-  // Default to local API for now
-  useEffect(() => {
-    localStorage.setItem('apiMode', 'local');
-  }, []);
-  const getBaseUrl = () => {
-    const apiMode = localStorage.getItem('apiMode') || 'local';
-    if (apiMode === 'local') {
-      return import.meta.env.VITE_API_BASE_URL_LOCAL;
-    }
-    return import.meta.env.VITE_API_BASE_URL_ONLINE;
-  };
-  const BASE_URL = getBaseUrl();
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     fetchStaff();
