@@ -16,6 +16,8 @@ import ProtectedRoutes from "./pages/ProtectedRoutes";
 import DashboardOrdersView from "./components/webComponent/Dashboard/DashboardOrdersView";
 import HomeNavbar from "./components/webComponent/Home/HomeNavbar";
 import TableSection from "./components/webComponent/Home/TableSection";
+import Pickup from "./pages/Pickup";
+import Delivery from "./pages/Delivery";
 import AddStaff from "./components/webComponent/Dashboard/staff/AddStaff";
 import LoginStaff from "./components/webComponent/Dashboard/staff/LoginStaff";
 import MenuStaff from "./components/webComponent/Dashboard/staff/MenuStaff";
@@ -69,6 +71,22 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoutes>
             <Orders />
+          </ProtectedRoutes>
+        ),
+      },
+      {
+        path: "/pickup",
+        element: (
+          <ProtectedRoutes>
+            <Pickup />
+          </ProtectedRoutes>
+        ),
+      },
+      {
+        path: "/delivery",
+        element: (
+          <ProtectedRoutes>
+            <Delivery />
           </ProtectedRoutes>
         ),
       },
