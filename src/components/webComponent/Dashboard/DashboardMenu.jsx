@@ -443,7 +443,7 @@ function DashboardMenu() {
                               className="border-border focus:border-[#4caf50] focus:ring-[#4caf50]"
                             />
                           </div>
-                          <div className="w-32">
+                          {/* <div className="w-32">
                             <Input
                               type="text"
                               placeholder={`Quantity`}
@@ -453,7 +453,7 @@ function DashboardMenu() {
                               }
                               className="border-border focus:border-[#4caf50] focus:ring-[#4caf50]"
                             />
-                          </div>
+                          </div> */}
                           <div className="w-32">
                             <Input
                               type="number"

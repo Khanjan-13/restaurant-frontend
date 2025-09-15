@@ -418,6 +418,16 @@ function DashboardInventory() {
     categories: [...new Set(filteredItems.map(item => item.categoryId?.categoryName || item.category?.categoryName || item.categoryName))].length
   };
 
+  // GST reference data for display
+  const gstRules = [
+    { context: "Food orders (dine-in / takeaway / delivery)", total: 5, cgst: 2.5, sgst: 2.5, note: "Standard non-alcoholic food service" },
+    { context: "Restaurants serving alcohol", total: 18, cgst: 9, sgst: 9, note: "Alcohol service attracts higher GST" },
+    { context: "Outdoor catering / banquet", total: 18, cgst: 9, sgst: 9, note: "Catering services" },
+    { context: "Packaged food: Cold drink", total: 18, cgst: 9, sgst: 9, note: "Example item rate" },
+    { context: "Packaged food: Packaged snacks", total: 12, cgst: 6, sgst: 6, note: "Example item rate" },
+    { context: "Unbranded essentials", total: 0, cgst: 0, sgst: 0, note: "No GST" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <div className="flex-1 lg:pl-72 pl-0">
@@ -768,6 +778,45 @@ function DashboardInventory() {
                 </form>
               </DialogContent>
             </Dialog>
+          </div>
+
+          {/* Custom GST Table */}
+          <div className="mt-6">
+            <Card className="border-border shadow-lg rounded-lg overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between pb-4">
+                <CardTitle className="flex justify-between items-center text-lg font-bold w-full">
+                  <div className="text-[#4caf50]">GST Split Reference</div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="w-full overflow-x-auto">
+                  <div className="min-w-[720px]">
+                    <Table className="text-sm">
+                      <TableHeader>
+                        <TableRow className="bg-muted/60">
+                          <TableHead className="px-4 py-3 font-semibold text-foreground uppercase tracking-wide">Context</TableHead>
+                          <TableHead className="text-right px-4 py-3 font-semibold text-foreground uppercase tracking-wide">Total GST</TableHead>
+                          <TableHead className="text-right px-4 py-3 font-semibold text-foreground uppercase tracking-wide">CGST</TableHead>
+                          <TableHead className="text-right px-4 py-3 font-semibold text-foreground uppercase tracking-wide">SGST</TableHead>
+                          <TableHead className="px-4 py-3 font-semibold text-foreground uppercase tracking-wide">Notes</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {gstRules.map((row, idx) => (
+                          <TableRow key={idx} className="even:bg-muted/20 border-b">
+                            <TableCell className="px-4 py-3 text-foreground">{row.context}</TableCell>
+                            <TableCell className="px-4 py-3 text-right text-foreground">{row.total}%</TableCell>
+                            <TableCell className="px-4 py-3 text-right text-foreground">{row.cgst}%</TableCell>
+                            <TableCell className="px-4 py-3 text-right text-foreground">{row.sgst}%</TableCell>
+                            <TableCell className="px-4 py-3 text-muted-foreground">{row.note}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
       </div>
