@@ -32,12 +32,17 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         });
         if (!isCancelled && Array.isArray(res.data)) {
           const map = res.data.reduce((acc, it) => {
-            if (it?._id != null) acc[it._id] = Number(it.quantity ?? 0);
+            if (it?._id != null) {
+              // Use currentStock, qty, or quantity - whichever is available
+              const stock = Number(it.currentStock ?? it.qty ?? it.quantity ?? 0);
+              acc[it._id] = stock;
+            }
             return acc;
           }, {});
           setStockById(map);
         }
       } catch (e) {
+        console.error('Error fetching stock:', e);
         // ignore
       }
     };
@@ -52,9 +57,20 @@ function OrdersBilling({ orderItems, setOrderItems }) {
 
   const getAvailableQty = (item) => {
     if (!item) return null;
+    
     // Prefer live stock map; fallback to item.originalQuantity if present
-    if (item._id && Number.isFinite(stockById[item._id])) return stockById[item._id];
-    if (Number.isFinite(item.originalQuantity)) return Number(item.originalQuantity);
+    if (item._id && Number.isFinite(stockById[item._id])) {
+      return stockById[item._id];
+    }
+    if (Number.isFinite(item.originalQuantity)) {
+      return Number(item.originalQuantity);
+    }
+    
+    // Additional fallback: check if item has quantity property
+    if (Number.isFinite(item.quantity)) {
+      return Number(item.quantity);
+    }
+    
     return null;
   };
 
