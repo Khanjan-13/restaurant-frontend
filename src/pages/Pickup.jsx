@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import HomeNavbar from "@/components/webComponent/Home/HomeNavbar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,55 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import axios from "axios";
 
 function Pickup() {
+  const [pickupGroups, setPickupGroups] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  useEffect(() => {
+    const fetchPickup = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${BASE_URL}/home/getallkot`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const rows = Array.isArray(res.data) ? res.data : [];
+        const onlyPickup = rows.filter((r) => (r.tableNumber || "").toUpperCase() === "PICK UP");
+        // Group by tokenNumber
+        const map = new Map();
+        for (const row of onlyPickup) {
+          const key = row.tokenNumber ?? row._id;
+          if (!map.has(key)) {
+            map.set(key, {
+              id: `pickup-${key}`,
+              token: row.tokenNumber ?? "-",
+              customerName: "Pickup",
+              items: [],
+            });
+          }
+          const group = map.get(key);
+          group.items.push({ name: row.itemName, qty: Number(row.itemQuantity || 0), price: Number(row.itemPrice || 0) });
+        }
+        // Convert to array and compute totals (subtotal only to avoid double tax)
+        const groups = Array.from(map.values()).map((g) => {
+          const subtotal = g.items.reduce((s, it) => s + it.price * it.qty, 0);
+          return { ...g, total: subtotal };
+        });
+        setPickupGroups(groups);
+      } catch (e) {
+        setError(e?.response?.data?.message || e?.message || "Failed to load pickup orders");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPickup();
+  }, [BASE_URL]);
+
   return (
     <div className="min-h-screen bg-background">
       <HomeNavbar activeTab="PICK UP" />
@@ -39,19 +86,22 @@ function Pickup() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {/* Demo data until API is wired */}
-                    {useMemo(() => [
-                      {
-                        id: "tok-101",
-                        token: "P-101",
-                        customerName: "Walk-in",
-                        items: [
-                          { name: "Veg Burger", qty: 2 },
-                          { name: "Fries", qty: 1 },
-                        ],
-                        total: 320,
-                      },
-                    ], []).map((row, idx) => (
+                    {loading && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Loading...</TableCell>
+                      </TableRow>
+                    )}
+                    {!loading && error && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-red-600">{error}</TableCell>
+                      </TableRow>
+                    )}
+                    {!loading && !error && pickupGroups.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No pickup orders.</TableCell>
+                      </TableRow>
+                    )}
+                    {!loading && !error && pickupGroups.map((row, idx) => (
                       <TableRow key={row.id} className="hover:bg-muted/30">
                         <TableCell className="text-center text-muted-foreground">{idx + 1}</TableCell>
                         <TableCell>

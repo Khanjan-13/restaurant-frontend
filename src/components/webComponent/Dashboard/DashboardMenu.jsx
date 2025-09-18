@@ -224,7 +224,7 @@ function DashboardMenu() {
   const canAddNewItem = (items) => {
     if (!items || items.length === 0) return false;
     const lastItem = items[items.length - 1];
-    return lastItem.name && lastItem.quantity && lastItem.price;
+    return Boolean(lastItem.name && lastItem.price);
   };
 
   const submitMenuItem = async (e) => {
@@ -239,8 +239,12 @@ function DashboardMenu() {
     }
 
     const validItems = menuItems[selectedCategory].filter(
-      item => item.name.trim() && item.quantity.trim() && item.price.trim()
-    );
+      item => item.name?.trim() && item.price?.trim()
+    ).map(item => ({
+      name: item.name.trim(),
+      quantity: (item.quantity && String(item.quantity).trim()) ? String(item.quantity).trim() : "1",
+      price: String(item.price).trim(),
+    }));
 
     if (validItems.length === 0) {
       toast.error("Please add at least one valid menu item.");
