@@ -23,6 +23,8 @@ function OrdersBilling({ orderItems, setOrderItems }) {
   const [customerQuery, setCustomerQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Fetch current stock for all menu items to enforce caps
@@ -835,7 +837,8 @@ function OrdersBilling({ orderItems, setOrderItems }) {
   const customerDiscountPct = selectedCustomer?.discount || 0;
   const discountAmount = subtotal * (customerDiscountPct / 100);
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-  const total = discountedSubtotal + tax;
+  const effectiveSubtotal = Math.max(0, discountedSubtotal - (couponDiscount || 0));
+  const total = effectiveSubtotal + tax;
 
   const handleSubmitKot = async (action) => {
     try {
@@ -1264,20 +1267,94 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         </div>
       </div>
 
-      {/* Coupon Placeholder */}
+      {/* Coupon Apply */}
       <div className="mt-2 p-2 border rounded-md bg-muted/20 flex items-center gap-2">
         <Input
           placeholder="Enter coupon code"
           value={couponCode || ""}
-          onChange={(e) => setCouponCode(e.target.value)}
+          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
         />
         <Button
           variant="outline"
           className="text-xs"
-          onClick={() => toast("Coupons will be supported soon")}
+          onClick={async () => {
+            try {
+              const token = localStorage.getItem("token");
+              if (!token) {
+                toast.error("Please login to apply coupon");
+                return;
+              }
+              if (!couponCode) {
+                toast.error("Enter a coupon code");
+                return;
+              }
+              const res = await axios.get(`${BASE_URL}/api/coupons/code/${encodeURIComponent(couponCode)}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              const coupon = res?.data?.data;
+              if (!coupon) {
+                toast.error("Invalid coupon");
+                return;
+              }
+              if (coupon.status !== "active") {
+                toast.error("Coupon is inactive");
+                return;
+              }
+              // Optional time window checks
+              const now = Date.now();
+              if (coupon.startDate && now < new Date(coupon.startDate).getTime()) {
+                toast.error("Coupon not started yet");
+                return;
+              }
+              if (coupon.endDate && now > new Date(coupon.endDate).getTime()) {
+                toast.error("Coupon expired");
+                return;
+              }
+              // Apply additional coupon discount as a negative fixed discountAmount override
+              // Compute extra discount from coupon on discountedSubtotal
+              const base = Math.max(0, subtotal - (subtotal * ((selectedCustomer?.discount || 0) / 100)));
+              let extra = 0;
+              if (coupon.discountType === "percent") {
+                extra = base * (Number(coupon.discountValue || 0) / 100);
+                if (Number.isFinite(coupon.maxDiscount)) {
+                  extra = Math.min(extra, Number(coupon.maxDiscount));
+                }
+              } else {
+                extra = Number(coupon.discountValue || 0);
+              }
+              if (Number.isFinite(coupon.minOrderAmount) && base < Number(coupon.minOrderAmount)) {
+                toast.error(`Minimum order ₹${Number(coupon.minOrderAmount)} required`);
+                return;
+              }
+              // Store applied coupon locally just for display; recompute totals below
+              setAppliedCoupon({ code: coupon.code, type: coupon.discountType, value: Number(coupon.discountValue || 0), maxDiscount: coupon.maxDiscount });
+              setCouponDiscount(extra);
+              toast.success(`Applied coupon ${coupon.code}`);
+            } catch (err) {
+              if (err?.response?.status === 404) {
+                toast.error("Coupon not found");
+              } else {
+                toast.error("Failed to apply coupon");
+              }
+            }
+          }}
         >
           Apply
         </Button>
+        {appliedCoupon && (
+          <Button
+            variant="outline"
+            className="text-xs"
+            onClick={() => {
+              setAppliedCoupon(null);
+              setCouponDiscount(0);
+              setCouponCode("");
+              toast.success("Coupon removed");
+            }}
+          >
+            Remove
+          </Button>
+        )}
       </div>
 
       <Separator className="my-2" />
@@ -1304,6 +1381,12 @@ function OrdersBilling({ orderItems, setOrderItems }) {
           <span className="text-sm font-medium">Tax:</span>
           <span className="text-sm font-medium">{tax.toFixed(2)}₹</span>
         </div>
+        {(appliedCoupon && (couponDiscount || 0) > 0) && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Coupon {appliedCoupon.code}:</span>
+            <span className="text-sm font-medium">- {Number(couponDiscount).toFixed(2)}₹</span>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <span className="text-base font-medium">Total Payable Amount:</span>
           <span className="text-base font-medium">{total.toFixed(2)}₹</span>
