@@ -5,6 +5,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { useLocation, useNavigate } from "react-router-dom";
 
 function OrdersBilling({ orderItems, setOrderItems }) {
@@ -16,6 +18,11 @@ function OrdersBilling({ orderItems, setOrderItems }) {
   const [tableOrders, setTableOrders] = useState([]);
   const [paymentMode, setPaymentMode] = useState(null); // State to track payment mode
   const [stockById, setStockById] = useState({}); // id -> available quantity from backend
+  // CRM: customers and selection
+  const [customers, setCustomers] = useState([]);
+  const [customerQuery, setCustomerQuery] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [couponCode, setCouponCode] = useState("");
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Fetch current stock for all menu items to enforce caps
@@ -53,6 +60,31 @@ function OrdersBilling({ orderItems, setOrderItems }) {
       isCancelled = true;
       clearInterval(intervalId);
     };
+  }, [BASE_URL]);
+
+  // Fetch customers for CRM selection
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const res = await axios.get(`${BASE_URL}/api/customers`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const raw = res.data;
+        const list = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.data)
+            ? raw.data
+            : Array.isArray(raw?.customers)
+              ? raw.customers
+              : [];
+        setCustomers(list);
+      } catch (e) {
+        console.error("Failed to fetch customers", e);
+      }
+    };
+    fetchCustomers();
   }, [BASE_URL]);
 
   const getAvailableQty = (item) => {
@@ -798,8 +830,12 @@ function OrdersBilling({ orderItems, setOrderItems }) {
       ? orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
       : 0);
 
-  const tax = subtotal * 0.05;
-  const total = subtotal + tax;
+  const tax = (Math.max(0, subtotal - (subtotal * ((selectedCustomer?.discount || 0) / 100)))) * 0.05;
+  // Apply customer discount (percentage on subtotal before tax)
+  const customerDiscountPct = selectedCustomer?.discount || 0;
+  const discountAmount = subtotal * (customerDiscountPct / 100);
+  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+  const total = discountedSubtotal + tax;
 
   const handleSubmitKot = async (action) => {
     try {
@@ -1157,12 +1193,112 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         );})}
       </div>
 
+      {/* Customer Selector */}
+      <div className="mt-2">
+        <div className="p-2 border rounded-md bg-muted/20">
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search customer by name or phone..."
+              value={customerQuery}
+              onChange={(e) => setCustomerQuery(e.target.value)}
+            />
+            {selectedCustomer && (
+              <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(null)}>
+                Remove
+              </Button>
+            )}
+          </div>
+          {selectedCustomer ? (
+            <div className="mt-2 flex items-center justify-between">
+              <div className="text-sm">
+                <div className="font-medium">{selectedCustomer.name}</div>
+                <div className="text-muted-foreground text-xs">{selectedCustomer.phone}{selectedCustomer.email ? ` • ${selectedCustomer.email}` : ''}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="capitalize">{selectedCustomer.status || 'active'}</Badge>
+                {(selectedCustomer.discount || 0) > 0 && (
+                  <Badge className="bg-green-100 text-green-800">-{selectedCustomer.discount}%</Badge>
+                )}
+              </div>
+            </div>
+          ) : (
+            customerQuery && (
+              <div className="mt-2 max-h-44 overflow-y-auto border rounded-md bg-white">
+                {customers
+                  .filter((c) => {
+                    const q = customerQuery.toLowerCase();
+                    return (
+                      c.name?.toLowerCase().includes(q) ||
+                      c.phone?.toLowerCase().includes(q) ||
+                      c.email?.toLowerCase().includes(q)
+                    );
+                  })
+                  .slice(0, 8)
+                  .map((c) => (
+                    <div
+                      key={c._id}
+                      className="px-3 py-2 text-sm hover:bg-muted/40 cursor-pointer flex items-center justify-between"
+                      onClick={() => {
+                        setSelectedCustomer(c);
+                        setCustomerQuery("");
+                        if ((c.discount || 0) > 0) {
+                          toast.success(`Applied ${c.discount}% discount for ${c.name}`);
+                        }
+                      }}
+                    >
+                      <div>
+                        <div className="font-medium">{c.name}</div>
+                        <div className="text-xs text-muted-foreground">{c.phone}{c.email ? ` • ${c.email}` : ''}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="capitalize">{c.status || 'active'}</Badge>
+                        {(c.discount || 0) > 0 && (
+                          <Badge className="bg-green-100 text-green-800">-{c.discount}%</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )
+          )}
+        </div>
+      </div>
+
+      {/* Coupon Placeholder */}
+      <div className="mt-2 p-2 border rounded-md bg-muted/20 flex items-center gap-2">
+        <Input
+          placeholder="Enter coupon code"
+          value={couponCode || ""}
+          onChange={(e) => setCouponCode(e.target.value)}
+        />
+        <Button
+          variant="outline"
+          className="text-xs"
+          onClick={() => toast("Coupons will be supported soon")}
+        >
+          Apply
+        </Button>
+      </div>
+
       <Separator className="my-2" />
       <div className="hidden md:grid gap-1">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Subtotal:</span>
           <span className="text-sm font-medium">{subtotal.toFixed(2)}₹</span>
         </div>
+
+        {(selectedCustomer?.discount || 0) > 0 && (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Customer Discount ({selectedCustomer.discount}%):</span>
+              <span className="text-sm font-medium">- {(subtotal * (selectedCustomer.discount / 100)).toFixed(2)}₹</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Discounted Subtotal:</span>
+              <span className="text-sm font-medium">{(Math.max(0, subtotal - (subtotal * (selectedCustomer.discount / 100)))).toFixed(2)}₹</span>
+            </div>
+          </>
+        )}
 
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Tax:</span>

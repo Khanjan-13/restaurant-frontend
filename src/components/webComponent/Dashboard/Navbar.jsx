@@ -18,7 +18,8 @@ import {
   faChevronDown,
   faUsers,
   faBoxes,
-  faUserFriends
+  faUserFriends,
+  faTag
 } from "@fortawesome/free-solid-svg-icons";
 
 function Navbar() {
@@ -248,6 +249,14 @@ function Navbar() {
             </div>
 
             {/* <Separator className="my-4 bg-gradient-to-r from-transparent via-green-200 to-transparent" /> */}
+
+            {/* Coupons Management */}
+            <div className="space-y-1">
+              <NavLink to="/dashboard/coupons" className={navLinkClass}>
+                <FontAwesomeIcon icon={faTag} className="h-4 w-4 shrink-0" />
+                {isExpanded && <span>Coupons</span>}
+              </NavLink>
+            </div>
 
             {/* Customer Management */}
             <div className="space-y-1">

@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet, Navigate } from "react-router-dom";
 import React from "react";
 import Home from "./pages/Home";
 import HorizNavbar from "./components/webComponent/HorizNavbar";
@@ -28,6 +28,7 @@ import DashboardInventory from "./components/webComponent/Dashboard/DashboardInv
 import DashboardCustomers from "./components/webComponent/Dashboard/DashboardCustomers";
 import BackupRestore from "./components/webComponent/Dashboard/BackupRestore";
 import InventoryReport from "./components/webComponent/Dashboard/InventoryReport";
+import DashboardCoupons from "./components/webComponent/Dashboard/DashboardCoupons";
 const Format = () => {
   return (
     <div>
@@ -203,6 +204,14 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: "/dashboard/coupons",
+            element: (
+              <ProtectedRoutes>
+                <DashboardCoupons />
+              </ProtectedRoutes>
+            ),
+          },
+          {
             path: "/dashboard/inventory-report",
             element: (
               <ProtectedRoutes>
@@ -234,10 +243,10 @@ const router = createBrowserRouter([
     path: "/signup",
     element: <SignUp />,
   },
-  // {
-  //   path: "*",
-  //   element: <Errpage />,
-  // },
+  {
+    path: "*",
+    element: <Navigate to="/login" replace />,
+  },
 ]);
 function LinkPage() {
   return (

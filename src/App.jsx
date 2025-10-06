@@ -1,8 +1,14 @@
 import "./App.css";
 import LinkPage from "./LinkPage";
 import { Toaster } from "react-hot-toast";
+import { useEffect } from "react";
+import { checkAuthentication } from "./utils/authUtils";
 
 function App() {
+  // Clean up any invalid session data on app start
+  useEffect(() => {
+    checkAuthentication();
+  }, []);
  
   return (
     <>
