@@ -306,7 +306,7 @@ function OrdersBilling({ orderItems, setOrderItems }) {
             <div class="kot-details">
               <p><strong>Token No:</strong> #${tokenNumber.toString().padStart(4, '0')}</p>
               <p><strong>Mode:</strong> ${diningMode}</p>
-              <p><strong>Table:</strong> ${diningMode === "PICK UP" ? "PICK UP" : tableId || "N/A"}</p>
+              <p><strong>Table:</strong> ${diningMode === "PICK UP" ? "PICK UP" : diningMode === "DELIVERY" ? "DELIVERY" : tableId || "N/A"}</p>
               <p><strong>Server:</strong> ${localStorage.getItem('staffName') || 'Staff'}</p>
             </div>
             
@@ -593,7 +593,7 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         <div class="order-details">
           <p><strong>Token No:</strong> #${tokenNumber.toString().padStart(4, '0')}</p>
           <p><strong>Mode:</strong> ${diningMode}</p>
-          <p><strong>Table:</strong> ${diningMode === "PICK UP" ? "PICK UP" : tableId || "N/A"}</p>
+          <p><strong>Table:</strong> ${diningMode === "PICK UP" ? "PICK UP" : diningMode === "DELIVERY" ? "DELIVERY" : tableId || "N/A"}</p>
           <p><strong>Server:</strong> ${localStorage.getItem('staffName') || 'Staff'}</p>
         </div>
         
@@ -850,6 +850,12 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         return;
       }
 
+      // Validate payment mode
+      if (!paymentMode) {
+        toast.error("Please select a payment mode before submitting KOT.");
+        return;
+      }
+
       // Fetch the latest token number from the backend
       const response = await axios.get(`${BASE_URL}/home/getLatestKot`, {
         headers: {
@@ -867,7 +873,7 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         itemPrice: Number(item.price),
         itemQuantity: Number(item.quantity),
         itemCategory: item.category,
-        tableNumber: diningMode === "PICK UP" ? "PICK UP" : tableId,
+        tableNumber: diningMode === "PICK UP" ? "PICK UP" : diningMode === "DELIVERY" ? "DELIVERY" : tableId,
         orderStatus: true,
         itemDescription: item.description || "",
       }));
@@ -1036,14 +1042,25 @@ function OrdersBilling({ orderItems, setOrderItems }) {
           >
             PICK UP
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+                         className={`px-2 ${diningMode === "DELIVERY"
+                 ? "bg-green-700 text-white"
+                 : "bg-gray-200"
+               }`}
+            onClick={() => handleDiningModeChange("DELIVERY")}
+          >
+            DELIVERY
+          </Button>
         </div>
         <div className="flex flex-col">
           {diningMode === "DINE IN" ? (
             <span className="text-base">
-              Table No. {tableId || "PICK UP"} {/* Display tableId */}
+              Table No. {tableId || "N/A"} {/* Display tableId */}
             </span>
           ) : (
-            <span className="text-base">PICK UP</span>
+            <span className="text-base">{diningMode}</span>
           )}
         </div>
       </div>
@@ -1433,20 +1450,35 @@ function OrdersBilling({ orderItems, setOrderItems }) {
             </label>
           </div>
         </div>
+        {!paymentMode && (
+          <div className="mt-2 text-xs text-red-600 font-medium text-center">
+            ⚠️ Please select a payment mode to enable KOT buttons
+          </div>
+        )}
       </div>
 
              <div className="mt-2 flex justify-between gap-1 md:gap-2">
                                    <Button
-            className="md:w-1/4 w-full bg-green-700 hover:bg-green-800 text-xs md:text-sm py-1 md:py-2"
+            className={`md:w-1/4 w-full text-xs md:text-sm py-1 md:py-2 ${
+              !paymentMode 
+                ? "bg-gray-400 hover:bg-gray-400 cursor-not-allowed" 
+                : "bg-green-700 hover:bg-green-800"
+            }`}
             onClick={() => handleSubmitKot()}
             data-kot="running"
+            disabled={!paymentMode}
           >
             KOT
           </Button>
           <Button
-            className="md:w-1/4 w-full bg-green-700 hover:bg-green-800 text-xs md:text-sm py-1 md:py-2"
+            className={`md:w-1/4 w-full text-xs md:text-sm py-1 md:py-2 ${
+              !paymentMode 
+                ? "bg-gray-400 hover:bg-gray-400 cursor-not-allowed" 
+                : "bg-green-700 hover:bg-green-800"
+            }`}
             onClick={() => handleSubmitKot("print")}
             data-kot="running"
+            disabled={!paymentMode}
           >
             KOT & Print
           </Button>
