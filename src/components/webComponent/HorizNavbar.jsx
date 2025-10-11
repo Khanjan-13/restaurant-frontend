@@ -26,12 +26,14 @@ import { NavLink } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import ProfileEdit from "./Profile/ProfileEdit";
 
 function HorizNavbar() {
   const navigate = useNavigate();
   const [ownerName, setOwnerName] = useState("");
   const [error, setError] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileEditOpen, setIsProfileEditOpen] = useState(false);
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
@@ -55,6 +57,19 @@ function HorizNavbar() {
     localStorage.removeItem("token");
     toast.success("Logged out successfully");
     navigate("/login");
+  };
+
+  const handleProfileUpdate = (newOwnerName) => {
+    setOwnerName(newOwnerName);
+    setIsProfileEditOpen(false);
+  };
+
+  const handleEditProfile = () => {
+    setIsProfileEditOpen(true);
+  };
+
+  const handleChangePassword = () => {
+    setIsProfileEditOpen(true);
   };
 
   const navLinkClass = ({ isActive }) =>
@@ -133,11 +148,17 @@ function HorizNavbar() {
                   Hello, {error ? "User" : ownerName || "Loading..."}!
                 </MenubarItem>
                 <MenubarSeparator className="bg-gray-200" />
-                <MenubarItem className="hover:bg-green-50 text-gray-700">
+                <MenubarItem 
+                  onClick={handleChangePassword}
+                  className="hover:bg-green-50 text-gray-700 cursor-pointer"
+                >
                   <FontAwesomeIcon icon={faKey} className="h-4 w-4 mr-2" />
                   Change Password
                 </MenubarItem>
-                <MenubarItem className="hover:bg-green-50 text-gray-700">
+                <MenubarItem 
+                  onClick={handleEditProfile}
+                  className="hover:bg-green-50 text-gray-700 cursor-pointer"
+                >
                   <FontAwesomeIcon icon={faEdit} className="h-4 w-4 mr-2" />
                   Edit Profile
                 </MenubarItem>
@@ -239,11 +260,25 @@ function HorizNavbar() {
 
             {/* Mobile Menu Footer */}
             <div className="border-t border-gray-200 p-4 space-y-2 bg-gradient-to-r from-green-50 to-green-100/30">
-              <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-green-100 hover:text-green-700 transition-all">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start gap-3 hover:bg-green-100 hover:text-green-700 transition-all"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleChangePassword();
+                }}
+              >
                 <FontAwesomeIcon icon={faKey} className="h-4 w-4" />
                 Change Password
               </Button>
-              <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-green-100 hover:text-green-700 transition-all">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start gap-3 hover:bg-green-100 hover:text-green-700 transition-all"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleEditProfile();
+                }}
+              >
                 <FontAwesomeIcon icon={faEdit} className="h-4 w-4" />
                 Edit Profile
               </Button>
@@ -262,6 +297,13 @@ function HorizNavbar() {
           </div>
         </div>
       </div>
+
+      {/* Profile Edit Dialog */}
+      <ProfileEdit
+        isOpen={isProfileEditOpen}
+        onClose={() => setIsProfileEditOpen(false)}
+        onUpdate={handleProfileUpdate}
+      />
     </>
   );
 }
