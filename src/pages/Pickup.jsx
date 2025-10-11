@@ -2,14 +2,7 @@ import React, { useMemo, useEffect, useState } from "react";
 import HomeNavbar from "@/components/webComponent/Home/HomeNavbar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import toast from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -161,147 +154,151 @@ function Pickup() {
             </Card>
           </div>
 
-          <Card className="border shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg">Pickup Orders Queue</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table className="text-sm">
-                  <TableHeader>
-                    <TableRow className="bg-muted/60">
-                      <TableHead className="text-center w-20">Sr. No.</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Items</TableHead>
-                      <TableHead className="text-right w-48">Bill</TableHead>
-                      <TableHead className="text-center w-40">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loading && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Loading...</TableCell>
-                      </TableRow>
-                    )}
-                    {!loading && error && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-red-600">{error}</TableCell>
-                      </TableRow>
-                    )}
-                    {!loading && !error && pickupGroups.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No pickup orders.</TableCell>
-                      </TableRow>
-                    )}
-                    {!loading && !error && pickupGroups.map((row, idx) => (
-                      <TableRow key={row.id} className="hover:bg-muted/30">
-                        <TableCell className="text-center text-muted-foreground">{idx + 1}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{row.customerName}</span>
-                            <span className="text-xs text-muted-foreground">Token: {row.token}</span>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant={row.orderStatus ? "default" : "secondary"}>
-                                {row.orderStatus ? "Active" : "Completed"}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                {row.itemCount} item{row.itemCount !== 1 ? 's' : ''}
-                              </span>
-                            </div>
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center py-8 text-muted-foreground">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              Loading pickup orders...
+            </div>
+          )}
+
+          {/* Error State */}
+          {!loading && error && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="p-6 text-center">
+                <div className="text-red-600 font-medium mb-2">Error Loading Orders</div>
+                <div className="text-red-500 text-sm">{error}</div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && pickupGroups.length === 0 && (
+            <Card className="border-dashed">
+              <CardContent className="p-8 text-center">
+                <div className="text-muted-foreground mb-2">No pickup orders found</div>
+                <div className="text-sm text-muted-foreground">Orders will appear here when customers place pickup orders</div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pickup Orders Cards - Compact */}
+          {!loading && !error && pickupGroups.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {pickupGroups.map((row, idx) => (
+                <Card key={row.id} className="border shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center">
+                          <span className="text-primary font-semibold text-xs">#{idx + 1}</span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm">{row.customerName}</div>
+                          <div className="text-xs text-muted-foreground">Token: {row.token}</div>
+                        </div>
+                      </div>
+                      <Badge variant={row.orderStatus ? "default" : "secondary"} className="text-xs">
+                        {row.orderStatus ? "Active" : "Completed"}
+                      </Badge>
+                    </div>
+
+                    {/* Items Summary */}
+                    <div className="mb-3">
+                      <div className="text-xs text-muted-foreground mb-1">
+                        {row.itemCount} item{row.itemCount !== 1 ? 's' : ''}
+                      </div>
+                      <div className="space-y-1">
+                        {row.items.slice(0, 2).map((item, i) => (
+                          <div key={i} className="flex items-center justify-between text-xs">
+                            <span className="truncate flex-1">{item.name}</span>
+                            <span className="text-muted-foreground ml-2">x{item.qty}</span>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            {row.items.map((it, i) => (
-                              <div key={i} className="flex items-center gap-2">
-                                <span className="text-foreground">{it.name}</span>
-                                <span className="text-xs text-muted-foreground">x {it.qty}</span>
+                        ))}
+                        {row.items.length > 2 && (
+                          <div className="text-xs text-muted-foreground">
+                            +{row.items.length - 2} more item{row.items.length - 2 !== 1 ? 's' : ''}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <Separator className="mb-3" />
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between">
+                      <div className="text-lg font-bold text-primary">
+                        ₹{row.total.toLocaleString()}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            const orderDetails = {
+                              token: row.token,
+                              customer: row.customerName,
+                              items: row.items,
+                              total: row.total,
+                              status: row.orderStatus ? "Active" : "Completed"
+                            };
+                            console.log("Order Details:", orderDetails);
+                            toast.info(`Viewing order #${row.token}`);
+                          }}
+                          className="h-7 px-2"
+                        >
+                          <FontAwesomeIcon icon={faEye} className="text-xs" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            const printContent = `
+                              <div style="font-family: Arial, sans-serif; padding: 20px;">
+                                <h2 style="text-align: center; margin-bottom: 20px;">PICKUP ORDER</h2>
+                                <p><strong>Token:</strong> ${row.token}</p>
+                                <p><strong>Customer:</strong> ${row.customerName}</p>
+                                <p><strong>Status:</strong> ${row.orderStatus ? "Active" : "Completed"}</p>
+                                <hr style="margin: 15px 0;">
+                                <h3>Items:</h3>
+                                ${row.items.map(item => `
+                                  <p>${item.name} x ${item.qty} = ₹${item.price * item.qty}</p>
+                                `).join('')}
+                                <hr style="margin: 15px 0;">
+                                <p><strong>Total: ₹${row.total}</strong></p>
                               </div>
-                            ))}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <span className="font-semibold">₹{row.total.toLocaleString()}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => {
-                                // View order details
-                                const orderDetails = {
-                                  token: row.token,
-                                  customer: row.customerName,
-                                  items: row.items,
-                                  total: row.total,
-                                  status: row.orderStatus ? "Active" : "Completed"
-                                };
-                                console.log("Order Details:", orderDetails);
-                                toast.info(`Viewing order #${row.token}`);
-                              }}
-                              className="gap-1"
-                            >
-                              <FontAwesomeIcon icon={faEye} className="text-xs" />
-                              View
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => {
-                                // Print order
-                                const printContent = `
-                                  <div style="font-family: Arial, sans-serif; padding: 20px;">
-                                    <h2 style="text-align: center; margin-bottom: 20px;">PICKUP ORDER</h2>
-                                    <p><strong>Token:</strong> ${row.token}</p>
-                                    <p><strong>Customer:</strong> ${row.customerName}</p>
-                                    <p><strong>Status:</strong> ${row.orderStatus ? "Active" : "Completed"}</p>
-                                    <hr style="margin: 15px 0;">
-                                    <h3>Items:</h3>
-                                    ${row.items.map(item => `
-                                      <p>${item.name} x ${item.qty} = ₹${item.price * item.qty}</p>
-                                    `).join('')}
-                                    <hr style="margin: 15px 0;">
-                                    <p><strong>Total: ₹${row.total}</strong></p>
-                                  </div>
-                                `;
-                                const printWindow = window.open('', '_blank');
-                                printWindow.document.write(printContent);
-                                printWindow.document.close();
-                                printWindow.print();
-                                toast.success("Print dialog opened");
-                              }}
-                              className="gap-1"
-                            >
-                              <FontAwesomeIcon icon={faPrint} className="text-xs" />
-                              Print
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              onClick={() => {
-                                if (confirm(`Are you sure you want to remove order #${row.token}?`)) {
-                                  // TODO: Implement delete API call
-                                  toast.success(`Order #${row.token} removed`);
-                                  fetchPickup(true); // Refresh the list
-                                }
-                              }}
-                              className="gap-1"
-                            >
-                              <FontAwesomeIcon icon={faTrash} className="text-xs" />
-                              Remove
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+                            `;
+                            const printWindow = window.open('', '_blank');
+                            printWindow.document.write(printContent);
+                            printWindow.document.close();
+                            printWindow.print();
+                            toast.success("Print dialog opened");
+                          }}
+                          className="h-7 px-2"
+                        >
+                          <FontAwesomeIcon icon={faPrint} className="text-xs" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to remove order #${row.token}?`)) {
+                              toast.success(`Order #${row.token} removed`);
+                              fetchPickup(true);
+                            }
+                          }}
+                          className="h-7 px-2"
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="text-xs" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
