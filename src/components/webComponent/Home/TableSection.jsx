@@ -155,7 +155,19 @@ function TableSection() {
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-              <Button className="gap-2">
+              <Button 
+                className="gap-2"
+                onClick={() => {
+                  // Find the first available table
+                  const availableTable = allTables.find(table => table.status !== "true");
+                  if (availableTable) {
+                    toast.success(`Reserving Table ${availableTable.tableId}`);
+                    handleTableClick(availableTable.tableId);
+                  } else {
+                    toast.error("No available tables to reserve");
+                  }
+                }}
+              >
                 <FontAwesomeIcon icon={faPlus} className="h-4 w-4" />
                 Reserve Table
               </Button>

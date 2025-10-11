@@ -14,7 +14,7 @@ import {
   faShoppingBag,
   faClock,
 } from "@fortawesome/free-solid-svg-icons";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,7 @@ import toast from "react-hot-toast";
 
 function HomeNavbar() {
   const [kotCount, setKotCount] = useState(0);
+  const location = useLocation();
 
   // Fetch real KOT count from API
   useEffect(() => {
@@ -87,6 +88,15 @@ function HomeNavbar() {
       activeColor: "bg-orange-600 text-white"
     }
   ];
+
+  // Get current active service based on location
+  const getCurrentService = () => {
+    const currentPath = location.pathname;
+    const currentService = orderTypes.find(type => type.path === currentPath);
+    return currentService || orderTypes[0]; // Default to DINE IN if not found
+  };
+
+  const currentService = getCurrentService();
 
   return (
     <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -150,34 +160,48 @@ function HomeNavbar() {
             </Button>
           </NavLink>
 
-          {/* Additional Actions - could be added later */}
-          <Button variant="outline" size="sm" className="gap-2">
-            <FontAwesomeIcon icon={faPlus} className="h-4 w-4" />
-            <span className="hidden sm:inline">Quick Add</span>
-          </Button>
         </div>
       </div>
 
-      {/* Optional: Order Type Info Bar (can be shown conditionally) */}
+      {/* Dynamic Order Type Info Bar */}
       <div className="px-6 py-2 bg-muted/20 border-t">
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-4">
             <span className="text-muted-foreground">Active Service:</span>
             <div className="flex items-center gap-1">
-              <FontAwesomeIcon icon={faUtensils} className="h-3 w-3 text-primary" />
-              <span className="font-medium">Dine In Service</span>
+              <FontAwesomeIcon 
+                icon={currentService.icon} 
+                className="h-3 w-3 text-primary" 
+              />
+              <span className="font-medium">{currentService.name} Service</span>
             </div>
           </div>
           
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Available Tables</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              <span>Occupied Tables</span>
-            </div>
+            {currentService.name === "DINE IN" && (
+              <>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Available Tables</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span>Occupied Tables</span>
+                </div>
+              </>
+            )}
+            {currentService.name === "PICK UP" && (
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>Pickup Orders Ready</span>
+              </div>
+            )}
+            {currentService.name === "DELIVERY" && (
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                <span>Delivery Orders</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

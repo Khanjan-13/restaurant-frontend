@@ -4,9 +4,10 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faRefresh, faEye, faTrash, faPrint } from "@fortawesome/free-solid-svg-icons";
+import { faRefresh, faEye, faTrash, faPrint, faShoppingBag } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 
 function Pickup() {
@@ -14,6 +15,8 @@ function Pickup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const fetchPickup = async (isRefresh = false) => {
@@ -236,15 +239,8 @@ function Pickup() {
                           size="sm" 
                           variant="outline"
                           onClick={() => {
-                            const orderDetails = {
-                              token: row.token,
-                              customer: row.customerName,
-                              items: row.items,
-                              total: row.total,
-                              status: row.orderStatus ? "Active" : "Completed"
-                            };
-                            console.log("Order Details:", orderDetails);
-                            toast.info(`Viewing order #${row.token}`);
+                            setSelectedOrder(row);
+                            setIsViewModalOpen(true);
                           }}
                           className="h-7 px-2"
                         >
@@ -299,6 +295,114 @@ function Pickup() {
               ))}
             </div>
           )}
+
+          {/* Order Details Modal */}
+          <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <FontAwesomeIcon icon={faShoppingBag} className="text-green-600" />
+                  Pickup Order Details
+                </DialogTitle>
+              </DialogHeader>
+              
+              {selectedOrder && (
+                <div className="space-y-6">
+                  {/* Order Header */}
+                  <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                    <div>
+                      <h3 className="font-semibold text-lg">{selectedOrder.customerName}</h3>
+                      <p className="text-sm text-muted-foreground">Token: {selectedOrder.token}</p>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant={selectedOrder.orderStatus ? "default" : "secondary"}>
+                        {selectedOrder.orderStatus ? "Active" : "Completed"}
+                      </Badge>
+                      <p className="text-2xl font-bold text-green-600 mt-1">
+                        ₹{selectedOrder.total.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Order Items */}
+                  <div>
+                    <h4 className="font-medium mb-3">Order Items ({selectedOrder.itemCount} items)</h4>
+                    <div className="space-y-3">
+                      {selectedOrder.items.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                          <div className="flex-1">
+                            <div className="font-medium">{item.name}</div>
+                            {item.description && (
+                              <div className="text-sm text-muted-foreground mt-1">{item.description}</div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-sm text-muted-foreground">
+                              Qty: {item.qty}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              ₹{item.price.toLocaleString()} each
+                            </div>
+                            <div className="font-medium">
+                              ₹{(item.price * item.qty).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Order Summary */}
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-medium">Total Amount:</span>
+                      <span className="text-2xl font-bold text-green-600">
+                        ₹{selectedOrder.total.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-2">
+                      Created: {new Date(selectedOrder.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center justify-end gap-2 pt-4 border-t">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        const printContent = `
+                          <div style="font-family: Arial, sans-serif; padding: 20px;">
+                            <h2 style="text-align: center; margin-bottom: 20px;">PICKUP ORDER</h2>
+                            <p><strong>Token:</strong> ${selectedOrder.token}</p>
+                            <p><strong>Customer:</strong> ${selectedOrder.customerName}</p>
+                            <p><strong>Status:</strong> ${selectedOrder.orderStatus ? "Active" : "Completed"}</p>
+                            <hr style="margin: 15px 0;">
+                            <h3>Items:</h3>
+                            ${selectedOrder.items.map(item => `
+                              <p>${item.name} x ${item.qty} = ₹${item.price * item.qty}</p>
+                            `).join('')}
+                            <hr style="margin: 15px 0;">
+                            <p><strong>Total: ₹${selectedOrder.total}</strong></p>
+                          </div>
+                        `;
+                        const printWindow = window.open('', '_blank');
+                        printWindow.document.write(printContent);
+                        printWindow.document.close();
+                        printWindow.print();
+                        toast.success("Print dialog opened");
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faPrint} className="mr-2" />
+                      Print Order
+                    </Button>
+                    <Button onClick={() => setIsViewModalOpen(false)}>
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>
