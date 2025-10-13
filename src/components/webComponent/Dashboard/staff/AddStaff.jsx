@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -43,6 +44,7 @@ function AddStaff() {
     mobile: "",
     email: "",
     password: "",
+    role:"waiter",
   });
   const [staffList, setStaffList] = useState([]);
   const [filteredStaff, setFilteredStaff] = useState([]);
@@ -77,6 +79,10 @@ function AddStaff() {
 
   const handleChange = (e) => {
     setStaffData({ ...staffData, [e.target.name]: e.target.value });
+  };
+
+  const handleRoleChange = (value) => {
+    setStaffData({ ...staffData, role: value });
   };
 
   const fetchStaff = async () => {
@@ -116,10 +122,19 @@ function AddStaff() {
       toast.error("Mobile number is required");
       return;
     }
+    if (!/^\d{10}$/.test(staffData.mobile.trim())) {
+      toast.error("Mobile number must be exactly 10 digits");
+      return;
+    }
     if (!staffData.password.trim()) {
       toast.error("Password is required");
       return;
     }
+    if (staffData.password.trim().length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -128,15 +143,10 @@ function AddStaff() {
     }
 
     try {
-      setLoading(true);
-      const response = await axios.post(
-        `${BASE_URL}/dashboard/staff/register`,
-        staffData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      toast.success("Staff member added successfully");
-      setStaffData({ name: "", mobile: "", email: "", password: "" });
+      await axios.post(`${BASE_URL}/dashboard/staff/register`, staffData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setStaffData({ name: "", mobile: "", email: "", password: "", role: "waiter" });
       fetchStaff();
     } catch (error) {
       console.error("Error adding staff:", error.response?.data || error.message);
@@ -345,6 +355,19 @@ function AddStaff() {
                       required
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Role *</label>
+                    <Select onValueChange={handleRoleChange} value={staffData.role}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="waiter">Waiter</SelectItem>
+                        <SelectItem value="chef">Chef</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 
                 <div className="flex justify-end pt-4">
@@ -390,15 +413,6 @@ function AddStaff() {
               ) : filteredStaff.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Staff Member</TableHead>
-                        <TableHead>Contact Info</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead className="text-center">Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
                     <TableBody>
                       {filteredStaff.map((staff, index) => (
                         <TableRow key={staff._id} className="hover:bg-muted/50 transition-colors">
@@ -428,8 +442,8 @@ function AddStaff() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                              Staff
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 capitalize">
+                              {staff.role || "staff"}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">

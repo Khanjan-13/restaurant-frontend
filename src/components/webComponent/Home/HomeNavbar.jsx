@@ -77,16 +77,16 @@ function HomeNavbar() {
       description: "Customer pickup",
       color: "bg-green-50 text-green-700 border-green-200",
       activeColor: "bg-green-600 text-white"
-    },
-    {
-      name: "DELIVERY",
-      path: "/delivery",
-      icon: faTruck,
-      image: "Home/delivery.png",
-      description: "Home delivery",
-      color: "bg-orange-50 text-orange-700 border-orange-200", 
-      activeColor: "bg-orange-600 text-white"
     }
+    // {
+    //   name: "DELIVERY",
+    //   path: "/delivery",
+    //   icon: faTruck,
+    //   image: "Home/delivery.png",
+    //   description: "Home delivery",
+    //   color: "bg-orange-50 text-orange-700 border-orange-200", 
+    //   activeColor: "bg-orange-600 text-white"
+    // }
   ];
 
   // Get current active service based on location

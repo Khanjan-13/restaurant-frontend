@@ -59,7 +59,7 @@ function DashboardCustomers() {
     phone: "",
     email: "",
     address: "",
-    status: "active",
+    status: "Family",
     discount: 0,
     notes: "",
   });
@@ -118,6 +118,13 @@ function DashboardCustomers() {
         throw new Error("Authentication token is missing. Please log in again.");
       }
 
+      // Basic phone validation: exactly 10 digits
+      const phoneDigits = String(customerForm.phone || "").trim();
+      if (!/^\d{10}$/.test(phoneDigits)) {
+        toast.error("Phone number must be exactly 10 digits");
+        return;
+      }
+
       // Safely decode JWT to extract user id for createdBy
       const parseJwt = (tkn) => {
         try {
@@ -140,13 +147,23 @@ function DashboardCustomers() {
       })();
       const createdBy = decoded?.id || decoded?.adminId || decoded?._id || localUser?._id || localUser?.id || null;
 
+      // Normalize status for backend enum (family | friend | vip)
+      const uiStatus = customerForm.status || "Family";
+      const statusDb = (() => {
+        const v = String(uiStatus).toLowerCase();
+        if (v.startsWith("vip")) return "vip";
+        if (v.startsWith("family")) return "family";
+        if (v.startsWith("friend")) return "friend";
+        return v;
+      })();
+
       const customerData = {
         name: customerForm.name,
-        phone: customerForm.phone,
+        phone: phoneDigits,
         email: customerForm.email,
         address: customerForm.address,
         notes: customerForm.notes,
-        status: customerForm.status || "active",
+        status: statusDb,
         discount: Number(customerForm.discount) || 0,
         createdBy,
       };
@@ -175,13 +192,30 @@ function DashboardCustomers() {
         throw new Error("Authentication token is missing. Please log in again.");
       }
 
+      // Basic phone validation: exactly 10 digits
+      const phoneDigits = String(customerForm.phone || "").trim();
+      if (!/^\d{10}$/.test(phoneDigits)) {
+        toast.error("Phone number must be exactly 10 digits");
+        return;
+      }
+
+      // Normalize status for backend enum (family | friend | vip)
+      const uiStatus = customerForm.status || "Family";
+      const statusDb = (() => {
+        const v = String(uiStatus).toLowerCase();
+        if (v.startsWith("vip")) return "vip";
+        if (v.startsWith("family")) return "family";
+        if (v.startsWith("friend")) return "friend";
+        return v;
+      })();
+
       const customerData = {
         name: customerForm.name,
-        phone: customerForm.phone,
+        phone: phoneDigits,
         email: customerForm.email,
         address: customerForm.address,
         notes: customerForm.notes,
-        status: customerForm.status || "active",
+        status: statusDb,
         discount: Number(customerForm.discount) || 0,
       };
 
@@ -247,7 +281,7 @@ function DashboardCustomers() {
       phone: "",
       email: "",
       address: "",
-      status: "active",
+      status: "Family",
       discount: 0,
       notes: "",
     });
@@ -259,7 +293,8 @@ function DashboardCustomers() {
 
     // Filter by status selector
     if (statusFilter) {
-      filtered = filtered.filter(customer => customer.status === statusFilter);
+      const desired = String(statusFilter).toLowerCase();
+      filtered = filtered.filter(customer => String(customer.status || "").toLowerCase() === desired);
     }
 
     // Extra filter (discount only)
@@ -309,20 +344,32 @@ function DashboardCustomers() {
     );
   };
 
-  const getStatusBadge = (customer) => {
-    if (!customer.isActive) {
+  const getStatusBadge = (status) => {
+    const s = String(status || "").toLowerCase();
+    if (s === 'family') {
       return (
-        <Badge variant="secondary" className="bg-gray-100 text-gray-800">
-          <FontAwesomeIcon icon={faUserTimes} className="h-3 w-3 mr-1" />
-          Inactive
+        <Badge variant="default" className="bg-blue-100 text-blue-800">
+          Family
         </Badge>
       );
     }
-    
+    if (s === 'friend') {
+      return (
+        <Badge variant="default" className="bg-green-100 text-green-800">
+          Friend
+        </Badge>
+      );
+    }
+    if (s === 'vip') {
+      return (
+        <Badge variant="default" className="bg-purple-100 text-purple-800">
+          VIP
+        </Badge>
+      );
+    }
     return (
-      <Badge variant="default" className="bg-green-100 text-green-800">
-        <FontAwesomeIcon icon={faUserCheck} className="h-3 w-3 mr-1" />
-        Active
+      <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+        Unknown
       </Badge>
     );
   };
@@ -330,10 +377,9 @@ function DashboardCustomers() {
   // Calculate stats
   const stats = {
     total: filteredCustomers.length,
-    active: filteredCustomers.filter(customer => customer.status === 'active').length,
-    inactive: filteredCustomers.filter(customer => customer.status === 'inactive').length,
-    vip: filteredCustomers.filter(customer => customer.status === 'vip').length,
-    banned: filteredCustomers.filter(customer => customer.status === 'banned').length,
+    family: filteredCustomers.filter(customer => String(customer.status || "").toLowerCase() === 'family').length,
+    friend: filteredCustomers.filter(customer => String(customer.status || "").toLowerCase() === 'friend').length,
+    vip: filteredCustomers.filter(customer => String(customer.status || "").toLowerCase() === 'vip').length,
     withDiscount: filteredCustomers.filter(customer => (customer.discount || 0) > 0).length
   };
 
@@ -393,8 +439,8 @@ function DashboardCustomers() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Active</p>
-                    <h3 className="text-2xl font-bold mt-2">{stats.active}</h3>
+                    <p className="text-sm font-medium text-muted-foreground">Family</p>
+                    <h3 className="text-2xl font-bold mt-2">{stats.family}</h3>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
                     <FontAwesomeIcon icon={faUserCheck} className="h-6 w-6 text-green-600" />
@@ -407,8 +453,8 @@ function DashboardCustomers() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Inactive</p>
-                    <h3 className="text-2xl font-bold mt-2">{stats.inactive}</h3>
+                    <p className="text-sm font-medium text-muted-foreground">Friend</p>
+                    <h3 className="text-2xl font-bold mt-2">{stats.friend}</h3>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
                     <FontAwesomeIcon icon={faUserTimes} className="h-6 w-6 text-gray-600" />
@@ -426,20 +472,6 @@ function DashboardCustomers() {
                   </div>
                   <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
                     <FontAwesomeIcon icon={faCrown} className="h-6 w-6 text-purple-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border shadow-sm bg-gradient-to-br from-background to-muted/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Banned</p>
-                    <h3 className="text-2xl font-bold mt-2">{stats.banned}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-                    <FontAwesomeIcon icon={faUserTimes} className="h-6 w-6 text-red-600" />
                   </div>
                 </div>
               </CardContent>
@@ -485,10 +517,9 @@ function DashboardCustomers() {
                   className="rounded-lg border border-input bg-background px-3 py-2 text-sm min-w-[140px]"
                 >
                   <option value="">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="vip">VIP</option>
-                  <option value="banned">Banned</option>
+                  <option value="Family">Family</option>
+                  <option value="Friend">Friend</option>
+                  <option value="VIP">VIP</option>
                 </select>
 
                 <select
@@ -584,7 +615,7 @@ function DashboardCustomers() {
                             )}
                           </TableCell>
                           <TableCell>
-                            {getStatusBadge(customer.status)}
+                    {getStatusBadge(customer.status)}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
@@ -759,10 +790,9 @@ function DashboardCustomers() {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
-                    <SelectItem value="banned">Banned</SelectItem>
+                    <SelectItem value="Family">Family</SelectItem>
+                    <SelectItem value="Friend">Friend</SelectItem>
+                    <SelectItem value="VIP">VIP</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -874,10 +904,9 @@ function DashboardCustomers() {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
-                    <SelectItem value="banned">Banned</SelectItem>
+                    <SelectItem value="Family">Family</SelectItem>
+                    <SelectItem value="Friend">Friend</SelectItem>
+                    <SelectItem value="VIP">VIP</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -83,14 +83,14 @@ const router = createBrowserRouter([
           </ProtectedRoutes>
         ),
       },
-      {
-        path: "/delivery",
-        element: (
-          <ProtectedRoutes>
-            <Delivery />
-          </ProtectedRoutes>
-        ),
-      },
+      // {
+      //   path: "/delivery",
+      //   element: (
+      //     <ProtectedRoutes>
+      //       <Delivery />
+      //     </ProtectedRoutes>
+      //   ),
+      // },
       {
         path: "/dashboard",
         element: (

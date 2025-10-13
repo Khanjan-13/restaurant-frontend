@@ -96,6 +96,10 @@ function DashboardCoupons() {
         toast.error("Discount must be greater than 0");
         return;
       }
+      if (payload.discountType === "percent" && payload.discountValue > 100) {
+        toast.error("Percent discount cannot exceed 100%");
+        return;
+      }
       if (editingId) {
         await axios.put(`${BASE_URL}/api/coupons/${editingId}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
@@ -223,8 +227,15 @@ function DashboardCoupons() {
               </div>
               <div>
                 <label className="text-xs font-medium">Discount Value</label>
-                <Input type="number" min="0" value={form.discountValue}
-                  onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
+                <Input type="number" min="0" max={form.discountType === "percent" ? 100 : undefined} value={form.discountValue}
+                  onChange={(e) => {
+                    const raw = Number(e.target.value);
+                    const next = isNaN(raw) ? 0 : raw;
+                    setForm({
+                      ...form,
+                      discountValue: form.discountType === "percent" ? Math.min(100, next) : next,
+                    });
+                  }}
                   placeholder={form.discountType === "percent" ? "e.g. 10 for 10%" : "e.g. 100 for ₹100"}
                 />
               </div>
