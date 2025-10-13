@@ -29,6 +29,7 @@ import DashboardCustomers from "./components/webComponent/Dashboard/DashboardCus
 import BackupRestore from "./components/webComponent/Dashboard/BackupRestore";
 import InventoryReport from "./components/webComponent/Dashboard/InventoryReport";
 import DashboardCoupons from "./components/webComponent/Dashboard/DashboardCoupons";
+import KotStaff from "./components/webComponent/Dashboard/staff/KotStaff";
 const Format = () => {
   return (
     <div>
@@ -147,6 +148,7 @@ const router = createBrowserRouter([
               </ProtectedRoutes>
             ),
           },
+         
           {
             path: "/dashboard/staff",
             element: (
@@ -222,6 +224,14 @@ const router = createBrowserRouter([
         ],
       },
     ],
+  },
+  {
+    path: "/dashboard/staff/kot",
+    element: (
+      <ProtectedRoutes>
+        <KotStaff/>
+      </ProtectedRoutes>
+    ),
   },
   {
     path: "/dashboard/staff-login",

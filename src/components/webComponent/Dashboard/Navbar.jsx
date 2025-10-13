@@ -240,10 +240,10 @@ function Navbar() {
                     <FontAwesomeIcon icon={faPlus} className="h-4 w-4 shrink-0" />
                     <span>Manage</span>
                   </NavLink>
-                  <NavLink to="/dashboard/inventory-report" className={navLinkClass}>
+                  {/* <NavLink to="/dashboard/inventory-report" className={navLinkClass}>
                     <FontAwesomeIcon icon={faPencil} className="h-4 w-4 shrink-0" />
                     <span>Reports</span>
-                  </NavLink>
+                  </NavLink> */}
                 </div>
               )}
             </div>
@@ -269,12 +269,12 @@ function Navbar() {
             <Separator className="my-4 bg-gradient-to-r from-transparent via-green-200 to-transparent" />
 
             {/* System */}
-            <div className="space-y-1">
+            {/* <div className="space-y-1">
               <NavLink to="/dashboard/backup" className={navLinkClass}>
                 <FontAwesomeIcon icon={faDatabase} className="h-4 w-4 shrink-0" />
                 {isExpanded && <span>Backup & Restore</span>}
               </NavLink>
-            </div>
+            </div> */}
           </nav>
         </div>
 

@@ -68,7 +68,7 @@ function LoginStaff() {
 
           // Redirect based on role
           if (response.data.staff.role === "chef") {
-            navigate("/staff/kot"); // Kitchen Order Tickets page
+            navigate("/dashboard/staff/kot"); // Kitchen Order Tickets page
           } else if (response.data.staff.role === "waiter") {
             navigate("/staff/table"); // Main home page for waiters
           } else {

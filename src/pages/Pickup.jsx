@@ -19,6 +19,110 @@ function Pickup() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+  const buildTicketHTML = (order) => {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString();
+    const timeStr = now.toLocaleTimeString();
+    return `
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Ticket #${order.token}</title>
+          <style>
+            @media print { body { margin: 0; } }
+            body { font-family: monospace; font-size: 12px; margin: 0; padding: 8px; }
+            .ticket { width: 80mm; max-width: 100%; margin: 0 auto; }
+            .center { text-align: center; }
+            .bold { font-weight: 700; }
+            .row { display: flex; justify-content: space-between; }
+            .divider { border-top: 1px dashed #000; margin: 8px 0; }
+            .small { font-size: 11px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { text-align: left; padding: 2px 0; }
+            th { border-bottom: 1px dashed #000; font-weight: 700; }
+            .col-item { width: 58%; }
+            .col-qty { width: 12%; text-align: center; }
+            .col-amt { width: 30%; text-align: right; }
+          </style>
+        </head>
+        <body>
+          <div class="ticket">
+            <div class="center bold">PICKUP ORDER</div>
+            <div class="center small">Token #${order.token}</div>
+            <div class="center small">${dateStr} ${timeStr}</div>
+            <div class="divider"></div>
+            <div class="row"><span>Customer</span><span>${order.customerName || "Pickup"}</span></div>
+            <div class="row"><span>Status</span><span>${order.orderStatus ? "Active" : "Completed"}</span></div>
+            <div class="divider"></div>
+            <table>
+              <thead>
+                <tr>
+                  <th class="col-item">Item</th>
+                  <th class="col-qty">Qty</th>
+                  <th class="col-amt">Amt</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${order.items.map(it => `
+                  <tr>
+                    <td class="col-item">${it.name}</td>
+                    <td class="col-qty">${it.qty}</td>
+                    <td class="col-amt">₹${(Number(it.price)||0) * (Number(it.qty)||0)}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+            <div class="divider"></div>
+            <div class="row bold"><span>Total</span><span>₹${order.total}</span></div>
+            <div class="center small" style="margin-top:8px;">Thank you!</div>
+          </div>
+          <script>window.onload=()=>{window.print();window.close();}</script>
+        </body>
+      </html>
+    `;
+  };
+
+  const handleSavePickup = async (order, action) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Authentication token is missing. Please log in again.");
+        return;
+      }
+
+      const tokenNumber = String(order?.token || "").trim();
+      if (!tokenNumber) {
+        toast.error("Invalid order token");
+        return;
+      }
+
+      const orderSaveUrl = `${BASE_URL}/dashboard/order-save/PICK UP`;
+      await axios.post(
+        orderSaveUrl,
+        { tokenNumber, paymentMethod: "Cash" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success("Order saved successfully!");
+
+      if (action === "print") {
+        const html = buildTicketHTML(order);
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(html);
+        printWindow.document.close();
+        // After opening print dialog, refresh to fetch current status
+        setTimeout(() => fetchPickup(true), 1500);
+        toast.success("Print dialog opened");
+      } else {
+        // Non-print save: refresh immediately
+        fetchPickup(true);
+      }
+    } catch (err) {
+      console.error("Error saving pickup order:", err);
+      toast.error("Failed to save the order. Please try again.");
+    }
+  };
+
   const fetchPickup = async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
@@ -250,30 +354,30 @@ function Pickup() {
                           size="sm" 
                           variant="outline"
                           onClick={() => {
-                            const printContent = `
-                              <div style="font-family: Arial, sans-serif; padding: 20px;">
-                                <h2 style="text-align: center; margin-bottom: 20px;">PICKUP ORDER</h2>
-                                <p><strong>Token:</strong> ${row.token}</p>
-                                <p><strong>Customer:</strong> ${row.customerName}</p>
-                                <p><strong>Status:</strong> ${row.orderStatus ? "Active" : "Completed"}</p>
-                                <hr style="margin: 15px 0;">
-                                <h3>Items:</h3>
-                                ${row.items.map(item => `
-                                  <p>${item.name} x ${item.qty} = ₹${item.price * item.qty}</p>
-                                `).join('')}
-                                <hr style="margin: 15px 0;">
-                                <p><strong>Total: ₹${row.total}</strong></p>
-                              </div>
-                            `;
-                            const printWindow = window.open('', '_blank');
-                            printWindow.document.write(printContent);
-                            printWindow.document.close();
-                            printWindow.print();
-                            toast.success("Print dialog opened");
+                            const html = buildTicketHTML(row);
+                            const w = window.open('', '_blank');
+                            w.document.write(html);
+                            w.document.close();
                           }}
                           className="h-7 px-2"
                         >
                           <FontAwesomeIcon icon={faPrint} className="text-xs" />
+                        </Button>
+                        {/* <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleSavePickup(row)}
+                          className="h-7 px-2"
+                        >
+                          Save
+                        </Button> */}
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleSavePickup(row, "print")}
+                          className="h-7 px-2"
+                        >
+                          Save & Print
                         </Button>
                         <Button 
                           size="sm" 
@@ -288,6 +392,7 @@ function Pickup() {
                         >
                           <FontAwesomeIcon icon={faTrash} className="text-xs" />
                         </Button>
+                        
                       </div>
                     </div>
                   </CardContent>

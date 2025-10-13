@@ -850,6 +850,12 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         return;
       }
 
+      // When in PICK UP mode, require payment selection before KOT
+      if (diningMode === "PICK UP" && !paymentMode) {
+        toast.error("Please select a payment mode for PICK UP before submitting KOT.");
+        return;
+      }
+
       // Fetch the latest token number from the backend
       const response = await axios.get(`${BASE_URL}/home/getLatestKot`, {
         headers: {
@@ -1447,16 +1453,26 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         
             <div className="mt-2 flex justify-between gap-1 md:gap-2">
          <Button
-           className="md:w-1/4 w-full text-xs md:text-sm py-1 md:py-2 bg-green-700 hover:bg-green-800"
+           className={`md:w-1/4 w-full text-xs md:text-sm py-1 md:py-2 ${
+             diningMode === "PICK UP" && !paymentMode
+               ? "bg-gray-400 hover:bg-gray-400 cursor-not-allowed"
+               : "bg-green-700 hover:bg-green-800"
+           }`}
            onClick={() => handleSubmitKot()}
            data-kot="running"
+           disabled={diningMode === "PICK UP" && !paymentMode}
          >
            KOT
          </Button>
          <Button
-           className="md:w-1/4 w-full text-xs md:text-sm py-1 md:py-2 bg-green-700 hover:bg-green-800"
+           className={`md:w-1/4 w-full text-xs md:text-sm py-1 md:py-2 ${
+             diningMode === "PICK UP" && !paymentMode
+               ? "bg-gray-400 hover:bg-gray-400 cursor-not-allowed"
+               : "bg-green-700 hover:bg-green-800"
+           }`}
            onClick={() => handleSubmitKot("print")}
            data-kot="running"
+           disabled={diningMode === "PICK UP" && !paymentMode}
          >
            KOT & Print
          </Button>

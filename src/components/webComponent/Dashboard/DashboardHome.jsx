@@ -45,27 +45,6 @@ import { faUserFriends } from "@fortawesome/free-solid-svg-icons";
 
 // Revenue trend chart removed in favor of live total revenue display
 
-const orderTypeData = [
-  { name: "Dine-in", value: 65, color: "#10b981" },
-  { name: "Pickup", value: 25, color: "#059669" },
-  { name: "Delivery", value: 10, color: "#047857" },
-];
-
-const topItems = [
-  { name: "Butter Chicken", orders: 145, revenue: 8700 },
-  { name: "Biryani", orders: 132, revenue: 7920 },
-  { name: "Paneer Tikka", orders: 98, revenue: 4900 },
-  { name: "Naan", orders: 87, revenue: 2610 },
-  { name: "Dal Makhani", orders: 76, revenue: 3040 },
-];
-
-const recentOrders = [
-  { id: "ORD-2024-001", customer: "Rahul Sharma", table: "Table 12", amount: 1250, status: "completed", time: "2 min ago" },
-  { id: "ORD-2024-002", customer: "Priya Patel", table: "Pickup", amount: 890, status: "preparing", time: "5 min ago" },
-  { id: "ORD-2024-003", customer: "Amit Kumar", table: "Table 8", amount: 2100, status: "served", time: "8 min ago" },
-  { id: "ORD-2024-004", customer: "Sneha Gupta", table: "Table 15", amount: 1650, status: "completed", time: "12 min ago" },
-];
-
 function DashboardHome() {
   const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState("today");
@@ -75,6 +54,9 @@ function DashboardHome() {
     averageOrderValue: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [orderTypeData, setOrderTypeData] = useState([]); // [{name, value, color}]
+  const [activeCustomers, setActiveCustomers] = useState(null);
+  const [recentOrders, setRecentOrders] = useState([]);
 
   // Fetch order stats from API
   useEffect(() => {
@@ -91,6 +73,20 @@ function DashboardHome() {
         });
 
         setOrderStats(response.data);
+        // Optional fields from API
+        if (Array.isArray(response.data?.orderTypeDistribution)) {
+          // Expect [{name: 'Dine-in', value: 65, color?: '#hex'}]
+          const palette = ["#10b981", "#059669", "#047857", "#16a34a", "#22c55e"];
+          const dist = response.data.orderTypeDistribution.map((d, i) => ({
+            name: d.name,
+            value: Number(d.value) || 0,
+            color: d.color || palette[i % palette.length],
+          }));
+          setOrderTypeData(dist);
+        }
+        if (typeof response.data?.activeCustomers === 'number') {
+          setActiveCustomers(response.data.activeCustomers);
+        }
       } catch (error) {
         console.error("Error fetching order stats:", error);
       } finally {
@@ -99,6 +95,51 @@ function DashboardHome() {
     };
 
     fetchOrderStats();
+  }, [timeRange]);
+
+  // Fetch recent orders (optional endpoint)
+  useEffect(() => {
+    const fetchRecent = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/dashboard/recent-orders?range=${timeRange}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (Array.isArray(res.data)) setRecentOrders(res.data.slice(0, 10));
+        else if (Array.isArray(res.data?.orders)) setRecentOrders(res.data.orders.slice(0, 10));
+      } catch {
+        // ignore if endpoint not present
+      }
+    };
+    fetchRecent();
+  }, [timeRange]);
+
+  // Fetch active customers count from backend (separate endpoint)
+  useEffect(() => {
+    const fetchActiveCustomers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        // Prefer dedicated endpoint if available
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/customers`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        // Normalize to array per customers endpoint
+        const raw = res.data;
+        const list = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.data)
+            ? raw.data
+            : Array.isArray(raw?.customers)
+              ? raw.customers
+              : [];
+        setActiveCustomers(list.length);
+      } catch (e) {
+        // ignore if endpoint not present
+      }
+    };
+    fetchActiveCustomers();
   }, [timeRange]);
   // Calculate stats based on API data
   const stats = [
@@ -120,7 +161,7 @@ function DashboardHome() {
     },
     {
       title: "Active Customers",
-      value: "100", //Static right now, will be dynamic later
+      value: activeCustomers != null ? String(activeCustomers) : "-",
       change: "0%",
       changeType: "neutral",
       icon: faUtensils,
@@ -167,18 +208,6 @@ function DashboardHome() {
               </h1>
               <p className="text-sm text-gray-600">Welcome back! Here's what's happening today.</p>
             </div>
-            <div className="flex items-center gap-4">
-              <select
-                value={timeRange}
-                onChange={(e) => setTimeRange(e.target.value)}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all"
-              >
-                <option value="today">Today</option>  
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-              </select>
-            </div>
           </div>
         </div>
 
@@ -212,13 +241,15 @@ function DashboardHome() {
                       <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                       <div className="flex items-center gap-2 mt-2">
                         <h3 className="text-xl md:text-2xl font-bold text-gray-800">{stat.value}</h3>
-                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                          stat.changeType === "positive" ? "text-green-700 bg-green-100" : 
-                          stat.changeType === "negative" ? "text-red-700 bg-red-100" : 
-                          "text-gray-600 bg-gray-100"
-                        }`}>
-                          {stat.change}
-                        </span>
+                        {stat.change && stat.change !== "0%" && (
+                          <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                            stat.changeType === "positive" ? "text-green-700 bg-green-100" : 
+                            stat.changeType === "negative" ? "text-red-700 bg-red-100" : 
+                            "text-gray-600 bg-gray-100"
+                          }`}>
+                            {stat.change}
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
                     </div>
@@ -268,119 +299,101 @@ function DashboardHome() {
               </CardContent>
             </Card>
 
-            {/* Order Types Pie Chart */}
+            {/* Order Types Pie Chart (dynamic if available) */}
             <Card className="lg:col-span-3 border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-bold text-gray-800">Order Distribution</CardTitle>
                 <p className="text-sm text-gray-600">By order type</p>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={orderTypeData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {orderTypeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                {orderTypeData.length > 0 ? (
+                  <>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={orderTypeData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {orderTypeData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--background))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="mt-4 space-y-2">
+                      {orderTypeData.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                            <span>{item.name}</span>
+                          </div>
+                          <span className="font-medium">{item.value}%</span>
+                        </div>
                       ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--background))', 
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="mt-4 space-y-2">
-                  {orderTypeData.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                        <span>{item.name}</span>
-                      </div>
-                      <span className="font-medium">{item.value}%</span>
                     </div>
-                  ))}
-                </div>
+                  </>
+                ) : (
+                  <div className="text-sm text-gray-500">No distribution data</div>
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Tables and Orders Row */}
-          {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6"> */}
-            {/* Top Menu Items */}
-            {/* <Card className="border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-bold text-gray-800">Top Selling Items</CardTitle>
-                <p className="text-sm text-gray-600">Most popular items today</p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {topItems.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-green-50 to-green-100/50 border border-green-200/50 hover:bg-gradient-to-r hover:from-green-100 hover:to-green-200/50 transition-all duration-300">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-sm">
-                          <span className="text-sm font-bold text-white">#{index + 1}</span>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-800">{item.name}</p>
-                          <p className="text-sm text-gray-600">{item.orders} orders</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-green-700">₹{item.revenue.toLocaleString()}</p>
-                        <p className="text-xs text-gray-500">Revenue</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card> */}
-
-            {/* Recent Orders */}
-            {/* <Card className="border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
+          {/* Recent Orders (dynamic if endpoint available) */}
+          {recentOrders.length > 0 && (
+            <Card className="border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-lg font-bold text-gray-800">Recent Orders</CardTitle>
                     <p className="text-sm text-gray-600">Latest customer orders</p>
                   </div>
-                  <Button variant="outline" size="sm" className="border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 transition-all">View All</Button>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {recentOrders.map((order, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-gradient-to-r hover:from-gray-50 hover:to-green-50/30 transition-all duration-300 border border-transparent hover:border-green-200/50">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="font-semibold text-gray-800">{order.customer}</p>
-                          <span className="text-sm text-gray-500">{order.time}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm text-gray-600">{order.table}</p>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={getStatusBadgeVariant(order.status)} className="text-xs">
-                              {order.status}
-                            </Badge>
-                            <span className="font-bold text-green-700">₹{order.amount}</span>
+                  {recentOrders.map((order, index) => {
+                    const customer = order.customer || order.customerName || "-";
+                    const table = order.table || order.tableNumber || order.mode || "-";
+                    const amount = order.amount ?? order.total ?? 0;
+                    const status = (order.status || order.orderStatus || "").toString().toLowerCase();
+                    const createdAt = order.createdAt ? new Date(order.createdAt).toLocaleString() : "";
+                    return (
+                      <div key={order.id || order._id || index} className="flex items-center justify-between p-3 rounded-lg hover:bg-gradient-to-r hover:from-gray-50 hover:to-green-50/30 transition-all duration-300 border border-transparent hover:border-green-200/50">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="font-semibold text-gray-800">{customer}</p>
+                            <span className="text-sm text-gray-500">{createdAt}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-gray-600">{table}</p>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={getStatusBadgeVariant(status)} className="text-xs capitalize">
+                                {status || "-"}
+                              </Badge>
+                              <span className="font-bold text-green-700">₹{Number(amount).toLocaleString()}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
-            </Card> */}
-          {/* </div> */}
+            </Card>
+          )}
 
           {/* Quick Actions */}
           <Card className="border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
