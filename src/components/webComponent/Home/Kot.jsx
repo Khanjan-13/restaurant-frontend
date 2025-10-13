@@ -33,6 +33,7 @@ function Kot() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("time"); // time, table
   const [filterStatus, setFilterStatus] = useState("all"); // all, pickup, dinein
+  const [doneStates, setDoneStates] = useState({}); // per-item done flags persisted
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const fetchKotItems = async () => {
@@ -113,6 +114,16 @@ function Kot() {
         delete updatedTimers[tokenNumber];
         return updatedTimers;
       });
+
+      // Clear any persisted done flags for this token
+      setDoneStates((prev) => {
+        const next = { ...prev };
+        Object.keys(next).forEach((k) => {
+          if (k.startsWith(`${tokenNumber}|`)) delete next[k];
+        });
+        try { localStorage.setItem("kotDoneStates", JSON.stringify(next)); } catch (_) {}
+        return next;
+      });
     } catch (error) {
       console.error("Error completing order:", error);
       toast.error("Error completing order.");
@@ -127,6 +138,33 @@ function Kot() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Load persisted done states
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("kotDoneStates");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") setDoneStates(parsed);
+      }
+    } catch (_) {}
+  }, []);
+
+  const persistDoneStates = (next) => {
+    setDoneStates(next);
+    try { localStorage.setItem("kotDoneStates", JSON.stringify(next)); } catch (_) {}
+  };
+
+  const makeItemKey = (tokenNumber, item, index) => {
+    const name = String(item?.itemName ?? "").replace(/\|/g, "");
+    return `${tokenNumber}|${name}|${index}`;
+  };
+
+  const toggleItemDone = (tokenNumber, item, index) => {
+    const key = makeItemKey(tokenNumber, item, index);
+    const next = { ...doneStates, [key]: !doneStates[key] };
+    persistDoneStates(next);
+  };
 
   // Timer update logic
   useEffect(() => {
@@ -359,7 +397,7 @@ function Kot() {
                       </Button>
                     </div>
                     
-                    <div className={`text-2xl font-bold ${getTimerColor(elapsedTime)} bg-white/10 rounded px-2 py-1 text-center`}>
+                    <div className={`text-2xl font-bold ${getTimerColor(elapsedTime)} bg-white/10 rounded px-2 py-1 text-center`.replace('bg.white','bg-white')}>
                       <FontAwesomeIcon icon={faClock} className="h-4 w-4 mr-2" />
                       {formatTime(elapsedTime)}
                     </div>
@@ -374,17 +412,34 @@ function Kot() {
                       
                       <Separator />
                       
-                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
                         {items
                           .filter((item) => item.isKot)
-                          .map((item, index) => (
-                            <div key={index} className="flex items-center justify-between py-1">
-                              <span className="font-medium text-sm">{item.itemName}</span>
-                              <Badge variant="outline" className="ml-2">
-                                {item.itemQuantity}
-                              </Badge>
-                            </div>
-                          ))}
+                          .map((item, index) => {
+                            const key = `${tokenNumber}|${String(item?.itemName ?? "").replace(/\|/g, "")}|${index}`;
+                            const isDone = !!doneStates[key];
+                            return (
+                              <div key={index} className="flex items-center justify-between py-1 gap-3">
+                                <span className={`font-medium text-sm ${isDone ? "line-through text-muted-foreground" : ""}`}>
+                                  {item.itemName}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="ml-2">
+                                    {item.itemQuantity}
+                                  </Badge>
+                                  <label className="flex items-center gap-1 text-xs cursor-pointer select-none">
+                                    <input
+                                      type="checkbox"
+                                      className="h-4 w-4"
+                                      checked={isDone}
+                                      onChange={() => toggleItemDone(tokenNumber, item, index)}
+                                    />
+                                    
+                                  </label>
+                                </div>
+                              </div>
+                            );
+                          })}
                       </div>
                     </div>
                   </CardContent>
