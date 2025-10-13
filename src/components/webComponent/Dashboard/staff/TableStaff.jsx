@@ -39,7 +39,7 @@ function TableStaff() {
     navigate("/Orders", { state: { token } });
   };
   return (
-    <div className="flex ml-56 min-h-screen flex-col bg-muted/40 pt-5">
+    <div className="flex min-h-screen flex-col bg-muted/40">
       <main className="grid flex-1 items-start mx-20 md:mx-30 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
         <div className="bg-background shadow-lg rounded-none p-6">
           <div className="mb-6">
