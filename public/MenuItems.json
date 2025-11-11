@@ -1,0 +1,18 @@
+[
+    { "id": 1, "name": "Cheeseburger", "category": "Burgers", "price": "$9.99" },
+    { "id": 2, "name": "Caesar Salad", "category": "Salads", "price": "$7.99" },
+    { "id": 3, "name": "Margherita Pizza", "category": "Pizza", "price": "$12.99" },
+    { "id": 4, "name": "Chicken Wings", "category": "Appetizers", "price": "$8.99" },
+    { "id": 5, "name": "Beef Tacos", "category": "Mexican", "price": "$10.49" },
+    { "id": 6, "name": "Spaghetti Bolognese", "category": "Pasta", "price": "$11.99" },
+    { "id": 7, "name": "Greek Salad", "category": "Salads", "price": "$7.49" },
+    { "id": 8, "name": "BBQ Chicken Pizza", "category": "Pizza", "price": "$13.49" },
+    { "id": 9, "name": "Fish and Chips", "category": "Seafood", "price": "$14.99" },
+    { "id": 10, "name": "Steak Frites", "category": "Steaks", "price": "$19.99" },
+    { "id": 11, "name": "Veggie Burger", "category": "Burgers", "price": "$9.49" },
+    { "id": 12, "name": "Chicken Caesar Wrap", "category": "Wraps", "price": "$8.49" },
+    { "id": 13, "name": "Margarita", "category": "Drinks", "price": "$6.99" },
+    { "id": 14, "name": "Chocolate Lava Cake", "category": "Desserts", "price": "$5.99" },
+    { "id": 15, "name": "Shrimp Scampi", "category": "Seafood", "price": "$15.99" }
+  ]
+  

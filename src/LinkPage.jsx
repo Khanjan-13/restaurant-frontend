@@ -1,0 +1,304 @@
+import { createBrowserRouter, RouterProvider, Outlet, Navigate } from "react-router-dom";
+import React from "react";
+import Home from "./pages/Home";
+import HorizNavbar from "./components/webComponent/HorizNavbar";
+import Orders from "./pages/Orders";
+import DashboardOrders from "./components/webComponent/Dashboard/DashboardOrders";
+import DashboardMenu from "./components/webComponent/Dashboard/DashboardMenu";
+import Navbar from "./components/webComponent/Dashboard/Navbar";
+import DashboardHome from "./components/webComponent/Dashboard/DashboardHome";
+import DashboardMenuManage from "./components/webComponent/Dashboard/DashboardMenuManage";
+import Kot from "./components/webComponent/Home/Kot";
+import DashboardTable from "./components/webComponent/Dashboard/DashboardTable";
+import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
+import ProtectedRoutes from "./pages/ProtectedRoutes";
+import DashboardOrdersView from "./components/webComponent/Dashboard/DashboardOrdersView";
+import HomeNavbar from "./components/webComponent/Home/HomeNavbar";
+import TableSection from "./components/webComponent/Home/TableSection";
+import Pickup from "./pages/Pickup";
+import Delivery from "./pages/Delivery";
+import AddStaff from "./components/webComponent/Dashboard/staff/AddStaff";
+import LoginStaff from "./components/webComponent/Dashboard/staff/LoginStaff";
+import MenuStaff from "./components/webComponent/Dashboard/staff/MenuStaff";
+import TableStaff from "./components/webComponent/Dashboard/staff/TableStaff";
+import Attendance from "./components/webComponent/Dashboard/staff/Attendance";
+import Salary from "./components/webComponent/Dashboard/staff/Salary";
+import DashboardInventory from "./components/webComponent/Dashboard/DashboardInventory";
+import DashboardCustomers from "./components/webComponent/Dashboard/DashboardCustomers";
+import BackupRestore from "./components/webComponent/Dashboard/BackupRestore";
+import InventoryReport from "./components/webComponent/Dashboard/InventoryReport";
+import DashboardCoupons from "./components/webComponent/Dashboard/DashboardCoupons";
+import KotStaff from "./components/webComponent/Dashboard/staff/KotStaff";
+import CustomerMenu from "./pages/CustomerMenu";
+import CustomerCheckout from "./pages/CustomerCheckout";
+import CustomerOrderStatus from "./pages/CustomerOrderStatus";
+import CustomerOrderHistory from "./pages/CustomerOrderHistory";
+import CustomerProfile from "./pages/CustomerProfile";
+import CustomerWelcome from "./pages/CustomerWelcome";
+const Format = () => {
+  return (
+    <div>
+      <HorizNavbar />
+      <Outlet />
+    </div>
+  );
+};
+
+const DashboardFormat = () => {
+  return (
+    <div className="pt-12 flex flex-1 flex-col">
+      <Navbar />
+      <Outlet />
+    </div>
+  );
+};
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Format />,
+    children: [
+      {
+        path: "/",
+        element: (
+          <ProtectedRoutes>
+            <Home />
+          </ProtectedRoutes>
+        ),
+      },
+      {
+        path: "/kot",
+        element: (
+          <ProtectedRoutes>
+            <Kot />
+          </ProtectedRoutes>
+        ),
+      },
+      {
+        path: "/orders",
+        element: (
+          <ProtectedRoutes>
+            <Orders />
+          </ProtectedRoutes>
+        ),
+      },
+      {
+        path: "/pickup",
+        element: (
+          <ProtectedRoutes>
+            <Pickup />
+          </ProtectedRoutes>
+        ),
+      },
+      // {
+      //   path: "/delivery",
+      //   element: (
+      //     <ProtectedRoutes>
+      //       <Delivery />
+      //     </ProtectedRoutes>
+      //   ),
+      // },
+      {
+        path: "/dashboard",
+        element: (
+          <ProtectedRoutes>
+            <DashboardFormat />
+          </ProtectedRoutes>
+        ),
+        children: [
+          {
+            path: "/dashboard",
+            element: (
+              <ProtectedRoutes>
+                <DashboardHome />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/orders",
+            element: (
+              <ProtectedRoutes>
+                <DashboardOrders />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/tables",
+            element: (
+              <ProtectedRoutes>
+                <DashboardTable />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/menu",
+            element: (
+              <ProtectedRoutes>
+                <DashboardMenu />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/menu-manage",
+            element: (
+              <ProtectedRoutes>
+                <DashboardMenuManage />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/view-orders/:id",
+            element: (
+              <ProtectedRoutes>
+                <DashboardOrdersView />
+              </ProtectedRoutes>
+            ),
+          },
+         
+          {
+            path: "/dashboard/staff",
+            element: (
+              <ProtectedRoutes>
+                <AddStaff />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/staff/attendance",
+            element: (
+              <ProtectedRoutes>
+                <Attendance />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/staff/salary",
+            element: (
+              <ProtectedRoutes>
+                <Salary />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/staff/salary",
+            element: (
+              <ProtectedRoutes>
+                <Salary />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/inventory-manage",
+            element: (
+              <ProtectedRoutes>
+                <DashboardInventory />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/customers",
+            element: (
+              <ProtectedRoutes>
+                <DashboardCustomers />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/backup",
+            element: (
+              <ProtectedRoutes>
+                <BackupRestore />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/coupons",
+            element: (
+              <ProtectedRoutes>
+                <DashboardCoupons />
+              </ProtectedRoutes>
+            ),
+          },
+          {
+            path: "/dashboard/inventory-report",
+            element: (
+              <ProtectedRoutes>
+                <InventoryReport />
+              </ProtectedRoutes>
+            ),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: "/dashboard/staff/kot",
+    element: (
+      <ProtectedRoutes>
+        <KotStaff/>
+      </ProtectedRoutes>
+    ),
+  },
+  {
+    path: "/dashboard/staff-login",
+    element: <LoginStaff />,
+  },
+  {
+    path: "/staff/menu",
+    element: <MenuStaff />,
+  },
+  {
+    path: "/staff/table",
+    element: <TableStaff />,
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/signup",
+    element: <SignUp />,
+  },
+  // Customer QR Code Routes (No Authentication Required)
+  {
+    path: "/customer/welcome/:tableId",
+    element: <CustomerWelcome />,
+  },
+  {
+    path: "/customer/menu/:tableId",
+    element: <CustomerMenu />,
+  },
+  {
+    path: "/customer-menu",
+    element: <CustomerMenu />,
+  },
+  {
+    path: "/customer/checkout",
+    element: <CustomerCheckout />,
+  },
+  {
+    path: "/customer/order-status/:orderId",
+    element: <CustomerOrderStatus />,
+  },
+  {
+    path: "/customer/order-history",
+    element: <CustomerOrderHistory />,
+  },
+  {
+    path: "/customer/profile",
+    element: <CustomerProfile />,
+  },
+  {
+    path: "*",
+    element: <Navigate to="/login" replace />,
+  },
+]);
+function LinkPage() {
+  return (
+    <div>
+      <RouterProvider router={router} />
+    </div>
+  );
+}
+
+export default LinkPage;
