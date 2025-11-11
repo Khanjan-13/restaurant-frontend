@@ -15,7 +15,7 @@ const SignupPage = () => {
   const getBaseUrl = () => {
     const apiMode = localStorage.getItem('apiMode') || 'local';
     if (apiMode === 'local') {
-      return import.meta.env.VITE_API_BASE_URL_LOCAL;
+      return import.meta.env.VITE_API_BASE_URL;
     }
     return import.meta.env.VITE_API_BASE_URL_ONLINE;
   };

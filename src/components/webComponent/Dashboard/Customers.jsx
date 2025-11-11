@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faSearch, faTrash, faEdit, faRefresh, faUser } from "@fortawesome/free-solid-svg-icons";
 
 function Customers() {
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL_LOCAL;
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
