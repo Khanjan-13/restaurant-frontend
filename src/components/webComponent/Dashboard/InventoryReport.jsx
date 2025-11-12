@@ -121,7 +121,7 @@ function InventoryReport() {
       try {
         setLoadingData(true);
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${BASE_URL}/inventory/analysis`, {
+        const res = await axios.get(`${BASE_URL}/dashboard/inventory/analysis`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (res?.data) setData(res.data);
@@ -133,9 +133,9 @@ function InventoryReport() {
       }
     };
 
-    // Fetch once on mount
+    // Fetch on mount and when filters change
     fetchAnalysis();
-  }, [BASE_URL]);
+  }, [BASE_URL, selectedPeriod, selectedCategory]);
 
   const getTrendIcon = (trend) => {
     return trend === "up" ? (
@@ -217,6 +217,32 @@ function InventoryReport() {
                   <SelectItem value="year">This Year</SelectItem>
                 </SelectContent>
               </Select>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setData(null);
+                  const fetchAnalysis = async () => {
+                    try {
+                      setLoadingData(true);
+                      const token = localStorage.getItem('token');
+                      const res = await axios.get(`${BASE_URL}/dashboard/inventory/analysis`, {
+                        headers: token ? { Authorization: `Bearer ${token}` } : {},
+                      });
+                      if (res?.data) setData(res.data);
+                    } catch (err) {
+                      console.error('Failed to fetch inventory analysis', err?.message || err);
+                    } finally {
+                      setLoadingData(false);
+                    }
+                  };
+                  fetchAnalysis();
+                }}
+                disabled={loadingData}
+              >
+                <FontAwesomeIcon icon={faEye} className="h-4 w-4 mr-2" />
+                {loadingData ? 'Refreshing...' : 'Refresh'}
+              </Button>
               <Button variant="outline" size="sm">
                 <FontAwesomeIcon icon={faDownload} className="h-4 w-4 mr-2" />
                 Export
@@ -238,8 +264,12 @@ function InventoryReport() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total Items</p>
-                    <h3 className="text-2xl font-bold mt-2">{totals.itemCount ?? 145}</h3>
-                    <p className="text-xs text-green-600 mt-1">+5% from last month</p>
+                    <h3 className="text-2xl font-bold mt-2">
+                      {loadingData ? '...' : (data?.summary?.totalItems ?? totals.itemCount ?? 0)}
+                    </h3>
+                    <p className="text-xs text-green-600 mt-1">
+                      {data?.summary?.totalItems ? 'Live data' : 'Loading...'}
+                    </p>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
                     <FontAwesomeIcon icon={faBoxes} className="h-6 w-6 text-blue-600" />
@@ -253,8 +283,12 @@ function InventoryReport() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total Units (Menu)</p>
-                    <h3 className="text-2xl font-bold mt-2">{totals.totalQuantity ?? 0}</h3>
-                    <p className="text-xs text-green-600 mt-1">Live from backend</p>
+                    <h3 className="text-2xl font-bold mt-2">
+                      {loadingData ? '...' : (data?.summary?.totalQuantity ?? totals.totalQuantity ?? 0)}
+                    </h3>
+                    <p className="text-xs text-green-600 mt-1">
+                      {data?.summary?.totalQuantity !== undefined ? 'Live from backend' : 'Loading...'}
+                    </p>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
                     <FontAwesomeIcon icon={faChartLine} className="h-6 w-6 text-green-600" />
@@ -268,8 +302,12 @@ function InventoryReport() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Low Stock Items</p>
-                    <h3 className="text-2xl font-bold mt-2">14</h3>
-                    <p className="text-xs text-yellow-600 mt-1">3 critical alerts</p>
+                    <h3 className="text-2xl font-bold mt-2">
+                      {loadingData ? '...' : (data?.summary?.lowStockCount ?? source.lowStockAlerts?.length ?? 0)}
+                    </h3>
+                    <p className="text-xs text-yellow-600 mt-1">
+                      {data?.summary?.criticalStockCount ? `${data.summary.criticalStockCount} critical alerts` : 'No critical alerts'}
+                    </p>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center">
                     <FontAwesomeIcon icon={faExclamationTriangle} className="h-6 w-6 text-yellow-600" />
@@ -283,8 +321,12 @@ function InventoryReport() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total Value</p>
-                    <h3 className="text-2xl font-bold mt-2">₹145,000</h3>
-                    <p className="text-xs text-green-600 mt-1">+12% from last month</p>
+                    <h3 className="text-2xl font-bold mt-2">
+                      {loadingData ? '...' : `₹${(data?.summary?.totalValue ?? 0).toLocaleString('en-IN')}`}
+                    </h3>
+                    <p className="text-xs text-green-600 mt-1">
+                      {data?.summary?.totalValue ? 'Live data' : 'Loading...'}
+                    </p>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
                     <FontAwesomeIcon icon={faChartLine} className="h-6 w-6 text-green-600" />
@@ -298,8 +340,12 @@ function InventoryReport() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Categories</p>
-                    <h3 className="text-2xl font-bold mt-2">6</h3>
-                    <p className="text-xs text-blue-600 mt-1">Well organized</p>
+                    <h3 className="text-2xl font-bold mt-2">
+                      {loadingData ? '...' : (data?.summary?.categoryCount ?? source.categoryDistribution?.length ?? 0)}
+                    </h3>
+                    <p className="text-xs text-blue-600 mt-1">
+                      {data?.summary?.categoryCount ? 'Well organized' : 'Loading...'}
+                    </p>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
                     <FontAwesomeIcon icon={faWarehouse} className="h-6 w-6 text-purple-600" />
@@ -318,42 +364,48 @@ function InventoryReport() {
                 <p className="text-sm text-muted-foreground">Monthly inventory levels</p>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={source.stockTrends}>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--background))', 
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgb(0 0 0 / 0.15)'
-                      }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="totalItems" 
-                      stroke="#3B82F6" 
-                      strokeWidth={2}
-                      name="Total Items"
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="lowStock" 
-                      stroke="#F59E0B" 
-                      strokeWidth={2}
-                      name="Low Stock"
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="outOfStock" 
-                      stroke="#EF4444" 
-                      strokeWidth={2}
-                      name="Out of Stock"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                {loadingData ? (
+                  <div className="flex items-center justify-center h-[300px]">
+                    <p className="text-muted-foreground">Loading chart data...</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={source.stockTrends || []}>
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis dataKey="month" axisLine={false} tickLine={false} />
+                      <YAxis axisLine={false} tickLine={false} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--background))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgb(0 0 0 / 0.15)'
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="totalItems" 
+                        stroke="#3B82F6" 
+                        strokeWidth={2}
+                        name="Total Items"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="lowStock" 
+                        stroke="#F59E0B" 
+                        strokeWidth={2}
+                        name="Low Stock"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="outOfStock" 
+                        stroke="#EF4444" 
+                        strokeWidth={2}
+                        name="Out of Stock"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
 
@@ -364,25 +416,31 @@ function InventoryReport() {
                 <p className="text-sm text-muted-foreground">Items by category</p>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={source.categoryDistribution}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {source.categoryDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                {loadingData ? (
+                  <div className="flex items-center justify-center h-[300px]">
+                    <p className="text-muted-foreground">Loading chart data...</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={source.categoryDistribution || []}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {(source.categoryDistribution || []).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -396,8 +454,13 @@ function InventoryReport() {
                 <p className="text-sm text-muted-foreground">Most used items this month</p>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {source.topConsumedItems.map((item, index) => (
+                {loadingData ? (
+                  <div className="flex items-center justify-center h-[300px]">
+                    <p className="text-muted-foreground">Loading data...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {(source.topConsumedItems || []).map((item, index) => (
                     <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -416,8 +479,9 @@ function InventoryReport() {
                         <p className="text-sm text-muted-foreground">{item.remaining} remaining</p>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -428,8 +492,13 @@ function InventoryReport() {
                 <p className="text-sm text-muted-foreground">Items needing restocking</p>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {source.lowStockAlerts.map((item, index) => (
+                {loadingData ? (
+                  <div className="flex items-center justify-center h-[300px]">
+                    <p className="text-muted-foreground">Loading data...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {(source.lowStockAlerts || []).map((item, index) => (
                     <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
@@ -448,8 +517,9 @@ function InventoryReport() {
                         <p className="text-sm text-muted-foreground">{item.daysLeft} days left</p>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -461,19 +531,24 @@ function InventoryReport() {
               <p className="text-sm text-muted-foreground">Financial breakdown of inventory</p>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Total Value</TableHead>
-                      <TableHead>Average Cost</TableHead>
-                      <TableHead>Items Count</TableHead>
-                      <TableHead>Value per Item</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {source.valueAnalysis.map((category, index) => (
+              {loadingData ? (
+                <div className="flex items-center justify-center h-[200px]">
+                  <p className="text-muted-foreground">Loading data...</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Total Value</TableHead>
+                        <TableHead>Average Cost</TableHead>
+                        <TableHead>Items Count</TableHead>
+                        <TableHead>Value per Item</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(source.valueAnalysis || []).map((category, index) => (
                       <TableRow key={index}>
                         <TableCell>
                           <Badge variant="outline" className="capitalize">
@@ -487,10 +562,11 @@ function InventoryReport() {
                           ₹{Math.round(category.totalValue / category.items).toLocaleString()}
                         </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -501,8 +577,13 @@ function InventoryReport() {
               <p className="text-sm text-muted-foreground">Latest inventory transactions</p>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {source.recentActivities.map((activity, index) => (
+              {loadingData ? (
+                <div className="flex items-center justify-center h-[200px]">
+                  <p className="text-muted-foreground">Loading data...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {(source.recentActivities || []).map((activity, index) => (
                   <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
@@ -529,8 +610,9 @@ function InventoryReport() {
                       <p className="text-xs text-muted-foreground">by {activity.user}</p>
                     </div>
                   </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
