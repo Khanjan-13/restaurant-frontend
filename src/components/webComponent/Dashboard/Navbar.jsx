@@ -202,14 +202,14 @@ function Navbar() {
                     <FontAwesomeIcon icon={faUserPlus} className="h-4 w-4 shrink-0" />
                     <span>Add Staff</span>
                   </NavLink>
-                  <NavLink to="/dashboard/staff/attendance" className={navLinkClass}>
+                  {/* <NavLink to="/dashboard/staff/attendance" className={navLinkClass}>
                     <FontAwesomeIcon icon={faPencil} className="h-4 w-4 shrink-0" />
                     <span>Attendance</span>
                   </NavLink>
                   <NavLink to="/dashboard/staff/salary" className={navLinkClass}>
                     <FontAwesomeIcon icon={faMoneyBill} className="h-4 w-4 shrink-0" />
                     <span>Salary</span>
-                  </NavLink>
+                  </NavLink> */}
                 </div>
               )}
             </div>

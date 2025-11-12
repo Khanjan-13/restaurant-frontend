@@ -566,7 +566,6 @@ function DashboardTable() {
                       <TableRow>
                         <TableHead>Table ID</TableHead>
                         <TableHead>Section</TableHead>
-                        <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -579,14 +578,6 @@ function DashboardTable() {
                           <TableCell>
                             <Badge variant="outline">
                               {table.tableSectionId?.tableSection || "No Section"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant={Math.random() > 0.6 ? "destructive" : "default"}
-                              className={Math.random() > 0.6 ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}
-                            >
-                              {Math.random() > 0.6 ? "Occupied" : "Available"}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
