@@ -51,6 +51,7 @@ function DashboardTable() {
   const [selectedTableForQR, setSelectedTableForQR] = useState(null);
   const [updateSection, setUpdateSection] = useState({});
   const [selectedSectionId, setSelectedSectionId] = useState("");
+  const [sectionFilter, setSectionFilter] = useState("");
   const [tableName, setTableName] = useState({ tableId: "" });
   const [tables, setTables] = useState([]);
   const [filteredTables, setFilteredTables] = useState([]);
@@ -66,15 +67,33 @@ function DashboardTable() {
 
   useEffect(() => {
     filterTables();
-  }, [tables, selectedSectionId, searchQuery]);
+  }, [tables, sectionFilter, searchQuery]);
+
+  const getTableSectionName = (table) => {
+    if (!table) return "";
+    const sectionInfo = table.tableSectionId;
+    if (sectionInfo && typeof sectionInfo === "object") {
+      return (
+        sectionInfo.tableSection ||
+        sectionInfo.name ||
+        sectionInfo.label ||
+        ""
+      );
+    }
+    return table.tableSection || "";
+  };
 
   const filterTables = () => {
     let filtered = [...tables];
 
-    if (selectedSectionId) {
-      filtered = filtered.filter(
-        (table) => table.tableSectionId?.tableSection === selectedSectionId
-      );
+    if (sectionFilter) {
+      filtered = filtered.filter((table) => {
+        const name = getTableSectionName(table);
+        return (
+          name &&
+          name.trim().toLowerCase() === sectionFilter.trim().toLowerCase()
+        );
+      });
     }
 
     if (searchQuery) {
@@ -296,8 +315,13 @@ function DashboardTable() {
 
   // Calculate stats
   const uniqueCategories = Array.from(
-    new Set(tables.map((table) => table.tableSectionId?.tableSection))
-  ).filter(Boolean);
+    new Set(
+      tables
+        .map((table) => getTableSectionName(table))
+        .filter((name) => !!name)
+        .map((name) => name.trim())
+    )
+  );
 
   const stats = {
     totalTables: tables.length,
@@ -443,9 +467,15 @@ function DashboardTable() {
                     </TableHeader>
                     <TableBody>
                       {sections.map((section) => {
-                        const tableCount = tables.filter(
-                          table => table.tableSectionId?._id === section._id
-                        ).length;
+                        const tableCount = tables.filter((table) => {
+                          const tableSectionName = getTableSectionName(table);
+                          return (
+                            tableSectionName &&
+                            section.tableSection &&
+                            tableSectionName.trim().toLowerCase() ===
+                              section.tableSection.trim().toLowerCase()
+                          );
+                        }).length;
                         
                         return (
                           <TableRow key={section._id} className="hover:bg-muted/50 transition-colors">
@@ -514,8 +544,8 @@ function DashboardTable() {
                     />
                   </div>
                   <select
-                    value={selectedSectionId}
-                    onChange={(e) => setSelectedSectionId(e.target.value)}
+                    value={sectionFilter}
+                    onChange={(e) => setSectionFilter(e.target.value)}
                     className="rounded-lg border border-input bg-background px-3 py-2 text-sm min-w-[150px]"
                   >
                     <option value="">All Sections</option>
@@ -600,7 +630,7 @@ function DashboardTable() {
                 <div className="text-center py-8">
                   <FontAwesomeIcon icon={faUtensils} className="h-8 w-8 text-muted-foreground mb-2" />
                   <p className="text-muted-foreground">
-                    {searchQuery || selectedSectionId 
+                    {searchQuery || sectionFilter 
                       ? "No tables match your filters"
                       : "No tables found. Add your first table using the button above."
                     }
