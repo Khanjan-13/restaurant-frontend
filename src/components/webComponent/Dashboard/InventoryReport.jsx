@@ -50,9 +50,11 @@ function InventoryReport() {
   const [selectedPeriod, setSelectedPeriod] = useState("month");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [totals, setTotals] = useState({ itemCount: null, totalQuantity: null });
+  const [data, setData] = useState(null);
+  const [loadingData, setLoadingData] = useState(false);
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-  // Mock data for inventory reports
+  // Mock data for inventory reports (fallback)
   const mockData = {
     // Stock level trends over time
     stockTrends: [
@@ -110,6 +112,30 @@ function InventoryReport() {
       { action: "Stock Used", item: "Onions", quantity: 8, date: "2024-01-13", user: "Chef" },
     ],
   };
+
+  // Determine source: prefer fetched data
+  const source = data || mockData;
+
+  useEffect(() => {
+    const fetchAnalysis = async () => {
+      try {
+        setLoadingData(true);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${BASE_URL}/inventory/analysis`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res?.data) setData(res.data);
+      } catch (err) {
+        // leave data as null to fall back to mockData
+        console.error('Failed to fetch inventory analysis', err?.message || err);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    // Fetch once on mount
+    fetchAnalysis();
+  }, [BASE_URL]);
 
   const getTrendIcon = (trend) => {
     return trend === "up" ? (
@@ -293,7 +319,7 @@ function InventoryReport() {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={mockData.stockTrends}>
+                  <LineChart data={source.stockTrends}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                     <XAxis dataKey="month" axisLine={false} tickLine={false} />
                     <YAxis axisLine={false} tickLine={false} />
@@ -341,7 +367,7 @@ function InventoryReport() {
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={mockData.categoryDistribution}
+                      data={source.categoryDistribution}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -350,7 +376,7 @@ function InventoryReport() {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {mockData.categoryDistribution.map((entry, index) => (
+                      {source.categoryDistribution.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
@@ -371,7 +397,7 @@ function InventoryReport() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockData.topConsumedItems.map((item, index) => (
+                  {source.topConsumedItems.map((item, index) => (
                     <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -403,7 +429,7 @@ function InventoryReport() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockData.lowStockAlerts.map((item, index) => (
+                  {source.lowStockAlerts.map((item, index) => (
                     <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
@@ -447,7 +473,7 @@ function InventoryReport() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockData.valueAnalysis.map((category, index) => (
+                    {source.valueAnalysis.map((category, index) => (
                       <TableRow key={index}>
                         <TableCell>
                           <Badge variant="outline" className="capitalize">
@@ -476,7 +502,7 @@ function InventoryReport() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockData.recentActivities.map((activity, index) => (
+                {source.recentActivities.map((activity, index) => (
                   <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
