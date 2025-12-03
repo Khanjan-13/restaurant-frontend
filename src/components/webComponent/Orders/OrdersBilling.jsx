@@ -25,7 +25,50 @@ function OrdersBilling({ orderItems, setOrderItems }) {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [gstConfig, setGstConfig] = useState({
+    total: 5,
+    cgst: 2.5,
+    sgst: 2.5
+  });
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  // Load GST configuration from localStorage
+  useEffect(() => {
+    const loadGstConfig = () => {
+      try {
+        const savedGst = localStorage.getItem('gstConfig');
+        if (savedGst) {
+          const parsed = JSON.parse(savedGst);
+          setGstConfig(parsed);
+        }
+      } catch (error) {
+        console.error('Error loading GST config:', error);
+      }
+    };
+    loadGstConfig();
+    
+    // Listen for storage changes (from other tabs) and custom events (from same tab)
+    const handleStorageChange = (e) => {
+      if (e.key === 'gstConfig') {
+        loadGstConfig();
+      }
+    };
+    const handleGstConfigUpdate = (e) => {
+      if (e.detail) {
+        setGstConfig(e.detail);
+      } else {
+        loadGstConfig();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('gstConfigUpdated', handleGstConfigUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('gstConfigUpdated', handleGstConfigUpdate);
+    };
+  }, []);
 
   // Fetch current stock for all menu items to enforce caps
   useEffect(() => {
@@ -339,8 +382,8 @@ function OrdersBilling({ orderItems, setOrderItems }) {
                 <span>₹${(totalAmount / 1.05).toFixed(2)}</span>
               </div>
               <div class="total-row">
-                <span>Tax (5%):</span>
-                <span>₹${(totalAmount - (totalAmount / 1.05)).toFixed(2)}</span>
+                <span>Tax (${gstConfig?.total || 5}%):</span>
+                <span>₹${(totalAmount - (totalAmount / (1 + (gstConfig?.total || 5) / 100))).toFixed(2)}</span>
               </div>
               <div class="divider"></div>
               <div class="total-row total-amount">
@@ -374,6 +417,46 @@ function OrdersBilling({ orderItems, setOrderItems }) {
     const currentDateTime = new Date().toLocaleString();
     const currentDate = new Date().toLocaleDateString();
     const currentTime = new Date().toLocaleTimeString();
+
+    // Aggregate items by name and price to combine duplicates
+    const aggregatedItems = new Map();
+    
+    // Process tableOrders
+    if (Array.isArray(tableOrders)) {
+      tableOrders.forEach((item) => {
+        const key = `${item.itemName}_${item.itemPrice}`;
+        if (aggregatedItems.has(key)) {
+          const existing = aggregatedItems.get(key);
+          existing.quantity += item.itemQuantity;
+        } else {
+          aggregatedItems.set(key, {
+            name: item.itemName,
+            price: item.itemPrice,
+            quantity: item.itemQuantity,
+          });
+        }
+      });
+    }
+    
+    // Process orderItems
+    if (Array.isArray(orderItems)) {
+      orderItems.forEach((item) => {
+        const key = `${item.name}_${item.price}`;
+        if (aggregatedItems.has(key)) {
+          const existing = aggregatedItems.get(key);
+          existing.quantity += item.quantity;
+        } else {
+          aggregatedItems.set(key, {
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          });
+        }
+      });
+    }
+    
+    // Convert map to array for rendering
+    const itemsToDisplay = Array.from(aggregatedItems.values());
 
     const orderHtml = `
     <html>
@@ -607,17 +690,7 @@ function OrdersBilling({ orderItems, setOrderItems }) {
             </tr>
           </thead>
           <tbody>
-            ${Array.isArray(tableOrders) ? tableOrders.map(
-              (item) => `
-              <tr>
-                <td class="item-name">${item.itemName}</td>
-                <td class="item-qty">${item.itemQuantity}</td>
-                <td class="item-price">₹${item.itemPrice.toFixed(2)}</td>
-                <td class="item-total">₹${(item.itemPrice * item.itemQuantity).toFixed(2)}</td>
-              </tr>
-            `
-            ).join("") : ""}
-            ${Array.isArray(orderItems) ? orderItems.map(
+            ${itemsToDisplay.map(
               (item) => `
               <tr>
                 <td class="item-name">${item.name}</td>
@@ -626,7 +699,7 @@ function OrdersBilling({ orderItems, setOrderItems }) {
                 <td class="item-total">₹${(item.price * item.quantity).toFixed(2)}</td>
               </tr>
             `
-            ).join("") : ""}
+            ).join("")}
           </tbody>
         </table>
         
@@ -636,7 +709,7 @@ function OrdersBilling({ orderItems, setOrderItems }) {
             <span>₹${(subtotal).toFixed(2)}</span>
           </div>
           <div class="total-row">
-            <span>Tax (5%):</span>
+            <span>Tax (${gstConfig?.total || 5}%):</span>
             <span>₹${tax.toFixed(2)}</span>
           </div>
           <div class="divider"></div>
@@ -853,7 +926,8 @@ function OrdersBilling({ orderItems, setOrderItems }) {
       ? orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
       : 0);
 
-  const tax = (Math.max(0, subtotal - (subtotal * ((selectedCustomer?.discount || 0) / 100)))) * 0.05;
+  const gstRate = (gstConfig?.total || 5) / 100; // Convert percentage to decimal, default to 5%
+  const tax = (Math.max(0, subtotal - (subtotal * ((selectedCustomer?.discount || 0) / 100)))) * gstRate;
   // Apply customer discount (percentage on subtotal before tax)
   const customerDiscountPct = selectedCustomer?.discount || 0;
   const discountAmount = subtotal * (customerDiscountPct / 100);
@@ -1416,7 +1490,7 @@ function OrdersBilling({ orderItems, setOrderItems }) {
         )}
 
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Tax:</span>
+          <span className="text-sm font-medium">Tax ({gstConfig?.total || 5}%):</span>
           <span className="text-sm font-medium">{tax.toFixed(2)}₹</span>
         </div>
         {(appliedCoupon && (couponDiscount || 0) > 0) && (
