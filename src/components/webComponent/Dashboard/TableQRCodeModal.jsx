@@ -13,13 +13,31 @@ import toast from "react-hot-toast";
 
 const TableQRCodeModal = ({ isOpen, onClose, table }) => {
   const [qrImageUrl, setQrImageUrl] = useState("");
+  const [displayUrl, setDisplayUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const canvasRef = useRef(null);
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+  const fixQrData = (url) => {
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname === "localhost" || urlObj.hostname === "127.0.0.1") {
+        const currentUrl = new URL(window.location.href);
+        urlObj.protocol = currentUrl.protocol;
+        urlObj.host = currentUrl.host;
+        return urlObj.toString();
+      }
+      return url;
+    } catch (e) {
+      return url;
+    }
+  };
+
   useEffect(() => {
     if (isOpen && table?.qrCodeData) {
-      generateQRImage(table.qrCodeData);
+      const fixedUrl = fixQrData(table.qrCodeData);
+      setDisplayUrl(fixedUrl);
+      generateQRImage(fixedUrl);
     }
   }, [isOpen, table]);
 
@@ -55,7 +73,7 @@ const TableQRCodeModal = ({ isOpen, onClose, table }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      
+
       const response = await axios.post(
         `${BASE_URL}/home/regenerate-qr/${table._id}`,
         {},
@@ -64,7 +82,9 @@ const TableQRCodeModal = ({ isOpen, onClose, table }) => {
         }
       );
 
-      await generateQRImage(response.data.qrCodeData);
+      const fixedUrl = fixQrData(response.data.qrCodeData);
+      setDisplayUrl(fixedUrl);
+      await generateQRImage(fixedUrl);
       toast.success("QR Code regenerated successfully");
     } catch (error) {
       console.error("Error regenerating QR:", error);
@@ -148,22 +168,8 @@ const TableQRCodeModal = ({ isOpen, onClose, table }) => {
                 <p className="text-sm text-gray-600 mb-2">
                   <strong>Section:</strong> {table.tableSectionId?.tableSection || "N/A"}
                 </p>
-                <p className="text-sm text-gray-600 mb-2">
-                  <strong>Status:</strong>{" "}
-                  <span
-                    className={`font-semibold ${
-                      table.status === "AVAILABLE"
-                        ? "text-green-600"
-                        : table.status === "OCCUPIED"
-                        ? "text-red-600"
-                        : "text-yellow-600"
-                    }`}
-                  >
-                    {table.status || "AVAILABLE"}
-                  </span>
-                </p>
                 <p className="text-xs text-gray-500 break-all">
-                  <strong>QR URL:</strong> {table.qrCodeData}
+                  <strong>QR URL:</strong> {displayUrl || table.qrCodeData}
                 </p>
               </div>
 
