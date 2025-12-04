@@ -215,56 +215,55 @@ function DashboardHome() {
         <div className="p-4 md:p-6 space-y-6">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {loading ? (
-            // Loading skeleton
-            Array.from({ length: 4 }).map((_, index) => (
-              <Card key={index} className="border border-gray-200 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300">
-                <CardContent className="p-4 md:p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
-                      <div className="h-8 bg-gray-200 rounded w-1/2 mb-1 animate-pulse"></div>
-                      <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse"></div>
-                    </div>
-                    <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse"></div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            stats.map((stat, index) => (
-              <Card key={index} className="group border border-gray-200 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-green-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <CardContent className="p-4 md:p-6 relative">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <h3 className="text-xl md:text-2xl font-bold text-gray-800">{stat.value}</h3>
-                        {stat.change && stat.change !== "0%" && (
-                          <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                            stat.changeType === "positive" ? "text-green-700 bg-green-100" : 
-                            stat.changeType === "negative" ? "text-red-700 bg-red-100" : 
-                            "text-gray-600 bg-gray-100"
-                          }`}>
-                            {stat.change}
-                          </span>
-                        )}
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 4 }).map((_, index) => (
+                <Card key={index} className="border border-gray-200 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300">
+                  <CardContent className="p-4 md:p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
+                        <div className="h-8 bg-gray-200 rounded w-1/2 mb-1 animate-pulse"></div>
+                        <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse"></div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+                      <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse"></div>
                     </div>
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                      <FontAwesomeIcon icon={stat.icon} className="h-5 w-5 text-white" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              stats.map((stat, index) => (
+                <Card key={index} className="group border border-gray-200 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-green-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <CardContent className="p-4 md:p-6 relative">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <h3 className="text-xl md:text-2xl font-bold text-gray-800">{stat.value}</h3>
+                          {stat.change && stat.change !== "0%" && (
+                            <span className={`text-xs font-medium px-2 py-1 rounded-full ${stat.changeType === "positive" ? "text-green-700 bg-green-100" :
+                              stat.changeType === "negative" ? "text-red-700 bg-red-100" :
+                                "text-gray-600 bg-gray-100"
+                              }`}>
+                              {stat.change}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                        <FontAwesomeIcon icon={stat.icon} className="h-5 w-5 text-white" />
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
 
           {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-6">
+          <div className="grid gap-4 md:gap-6">
             {/* Total Revenue (Live) */}
             <Card className="lg:col-span-4 border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
@@ -299,56 +298,7 @@ function DashboardHome() {
               </CardContent>
             </Card>
 
-            {/* Order Types Pie Chart (dynamic if available) */}
-            <Card className="lg:col-span-3 border border-gray-200 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-bold text-gray-800">Order Distribution</CardTitle>
-                <p className="text-sm text-gray-600">By order type</p>
-              </CardHeader>
-              <CardContent>
-                {orderTypeData.length > 0 ? (
-                  <>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={orderTypeData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={100}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {orderTypeData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: 'hsl(var(--background))', 
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px'
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="mt-4 space-y-2">
-                      {orderTypeData.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                            <span>{item.name}</span>
-                          </div>
-                          <span className="font-medium">{item.value}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-sm text-gray-500">No distribution data</div>
-                )}
-              </CardContent>
-            </Card>
+
           </div>
 
           {/* Recent Orders (dynamic if endpoint available) */}

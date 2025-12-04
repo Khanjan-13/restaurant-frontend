@@ -57,7 +57,7 @@ function DashboardTable() {
   const [filteredTables, setFilteredTables] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
@@ -352,7 +352,7 @@ function DashboardTable() {
         {/* Dashboard Content */}
         <div className="p-6 space-y-6">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="border shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -381,33 +381,7 @@ function DashboardTable() {
               </CardContent>
             </Card>
 
-            <Card className="border shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Occupied</p>
-                    <h3 className="text-2xl font-bold mt-2">{stats.occupiedTables}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-                    <FontAwesomeIcon icon={faUsers} className="h-6 w-6 text-red-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card className="border shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Available</p>
-                    <h3 className="text-2xl font-bold mt-2">{stats.availableTables}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
-                    <FontAwesomeIcon icon={faClock} className="h-6 w-6 text-orange-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Add Section Form */}
@@ -473,10 +447,10 @@ function DashboardTable() {
                             tableSectionName &&
                             section.tableSection &&
                             tableSectionName.trim().toLowerCase() ===
-                              section.tableSection.trim().toLowerCase()
+                            section.tableSection.trim().toLowerCase()
                           );
                         }).length;
-                        
+
                         return (
                           <TableRow key={section._id} className="hover:bg-muted/50 transition-colors">
                             <TableCell className="font-medium">
@@ -532,9 +506,9 @@ function DashboardTable() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="relative min-w-[250px]">
-                    <FontAwesomeIcon 
-                      icon={faSearch} 
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" 
+                    <FontAwesomeIcon
+                      icon={faSearch}
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4"
                     />
                     <Input
                       placeholder="Search tables..."
@@ -621,7 +595,7 @@ function DashboardTable() {
                 <div className="text-center py-8">
                   <FontAwesomeIcon icon={faUtensils} className="h-8 w-8 text-muted-foreground mb-2" />
                   <p className="text-muted-foreground">
-                    {searchQuery || sectionFilter 
+                    {searchQuery || sectionFilter
                       ? "No tables match your filters"
                       : "No tables found. Add your first table using the button above."
                     }

@@ -1,10 +1,43 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPlus,
+  faSearch,
+  faPenToSquare,
+  faTrash,
+  faTicket,
+  faPercent,
+  faTag,
+  faClock
+} from "@fortawesome/free-solid-svg-icons";
 
 function DashboardCoupons() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -62,8 +95,10 @@ function DashboardCoupons() {
 
   const resetForm = () => {
     setEditingId(null);
-    setForm({ code: "", description: "",
-      discountType: "percent", discountValue: 0, status: "active" });
+    setForm({
+      code: "", description: "",
+      discountType: "percent", discountValue: 0, status: "active"
+    });
   };
 
   const openCreate = () => {
@@ -136,113 +171,188 @@ function DashboardCoupons() {
     }
   };
 
+  // Stats
+  const stats = {
+    total: coupons.length,
+    active: coupons.filter(c => c.status === 'active').length,
+    inactive: coupons.filter(c => c.status === 'inactive').length
+  };
+
   return (
-    <div className="p-3 md:p-6">
-      <div className="flex items-center justify-between mb-3 w-full md:w-[48rem] mx-auto">
-        <h1 className="text-lg md:text-xl font-semibold">Coupons</h1>
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder="Search coupons..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-40 md:w-64"
-          />
-          <Button onClick={openCreate} className="bg-green-700 hover:bg-green-800">New Coupon</Button>
-        </div>
-      </div>
-
-      <div className="border rounded-md overflow-hidden w-full md:w-[48rem] mx-auto">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-[#f7f7f7] text-left">
-                <th className="py-2 px-2 w-[24%]">Code</th>
-                <th className="py-2 px-2 w-[28%]">Description</th>
-                <th className="py-2 px-2 w-[18%]">Type / Value</th>
-                <th className="py-2 px-2 w-[15%]">Status</th>
-                <th className="py-2 px-2 w-[15%] text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="py-4 px-2">Loading...</td>
-                </tr>
-              ) : filteredCoupons.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-4 px-2">No coupons found</td>
-                </tr>
-              ) : (
-                filteredCoupons.map((c) => (
-                  <tr key={c._id} className="border-t">
-                    <td className="py-2 px-2 truncate">{c.code}</td>
-                    <td className="py-2 px-2 truncate">{c.description}</td>
-                    <td className="py-2 px-2">
-                      {(c.discountType || "percent").toString()} / {Number(c.discountValue ?? 0)}
-                    </td>
-                    <td className="py-2 px-2">
-                      <Badge variant="outline" className="capitalize">{c.status || "active"}</Badge>
-                    </td>
-                    <td className="py-2 px-2">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" onClick={() => openEdit(c)}>Edit</Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDelete(c._id)}>Delete</Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {isFormOpen && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white w-[95%] md:w-[36rem] rounded-md shadow-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-base md:text-lg font-semibold">{editingId ? "Edit Coupon" : "New Coupon"}</h2>
-              <Button variant="outline" size="sm" onClick={() => setIsFormOpen(false)}>Close</Button>
+    <div className="min-h-screen bg-background">
+      <div className="flex-1 lg:pl-72 pl-0">
+        {/* Header */}
+        <div className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex h-20 items-center justify-between px-6">
+            <div>
+              <h1 className="text-2xl font-semibold">Coupons</h1>
+              <p className="text-sm text-muted-foreground">
+                Manage discount coupons and offers
+              </p>
             </div>
-            <Separator className="mb-3" />
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium">Code</label>
-                <Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="SAVE10" />
+            <Button onClick={openCreate} className="gap-2">
+              <FontAwesomeIcon icon={faPlus} className="h-4 w-4" />
+              New Coupon
+            </Button>
+          </div>
+        </div>
+
+        {/* Dashboard Content */}
+        <div className="p-6 space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="border shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total Coupons</p>
+                    <h3 className="text-2xl font-bold mt-2">{stats.total}</h3>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <FontAwesomeIcon icon={faTicket} className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Active</p>
+                    <h3 className="text-2xl font-bold mt-2">{stats.active}</h3>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <FontAwesomeIcon icon={faPercent} className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Inactive</p>
+                    <h3 className="text-2xl font-bold mt-2">{stats.inactive}</h3>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                    <FontAwesomeIcon icon={faTag} className="h-6 w-6 text-gray-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Coupons Table */}
+          <Card className="border shadow-sm">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">All Coupons</CardTitle>
+                  <CardDescription>View and manage your discount codes</CardDescription>
+                </div>
+                <div className="relative min-w-[250px]">
+                  <FontAwesomeIcon
+                    icon={faSearch}
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4"
+                  />
+                  <Input
+                    placeholder="Search coupons..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-medium">Description</label>
-                <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Summer discount" />
-              </div>
-              <div>
-                <label className="text-xs font-medium">Discount Type</label>
-                <select
-                  className="w-full border rounded-md h-9 px-2 text-sm"
-                  value={form.discountType}
-                  onChange={(e) => setForm({ ...form, discountType: e.target.value })}
-                >
-                  <option value="percent">Percent (%)</option>
-                  <option value="fixed">Fixed (₹)</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-medium">Discount Value</label>
-                <Input type="number" min="0" max={form.discountType === "percent" ? 100 : undefined} value={form.discountValue}
-                  onChange={(e) => {
-                    const raw = Number(e.target.value);
-                    const next = isNaN(raw) ? 0 : raw;
-                    setForm({
-                      ...form,
-                      discountValue: form.discountType === "percent" ? Math.min(100, next) : next,
-                    });
-                  }}
-                  placeholder={form.discountType === "percent" ? "e.g. 10 for 10%" : "e.g. 100 for ₹100"}
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-8">
+                  <FontAwesomeIcon icon={faClock} className="h-8 w-8 text-muted-foreground animate-spin mb-2" />
+                  <p className="text-muted-foreground">Loading coupons...</p>
+                </div>
+              ) : filteredCoupons.length === 0 ? (
+                <div className="text-center py-8">
+                  <FontAwesomeIcon icon={faTicket} className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">No coupons found.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Code</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Type / Value</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCoupons.map((c) => (
+                        <TableRow key={c._id} className="hover:bg-muted/50 transition-colors">
+                          <TableCell className="font-medium">{c.code}</TableCell>
+                          <TableCell>{c.description}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">
+                              {c.discountType === "percent" ? `${c.discountValue}%` : `₹${c.discountValue}`}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={c.status === "active" ? "default" : "secondary"} className="capitalize">
+                              {c.status || "active"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button variant="outline" size="sm" onClick={() => openEdit(c)}>
+                                <FontAwesomeIcon icon={faPenToSquare} className="h-3 w-3 mr-1" />
+                                Edit
+                              </Button>
+                              <Button variant="destructive" size="sm" onClick={() => handleDelete(c._id)}>
+                                <FontAwesomeIcon icon={faTrash} className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{editingId ? "Edit Coupon" : "Create New Coupon"}</DialogTitle>
+            <DialogDescription>
+              {editingId ? "Update the coupon details below." : "Fill in the details to create a new coupon."}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="code">Code</Label>
+                <Input
+                  id="code"
+                  placeholder="e.g. SAVE10"
+                  value={form.code}
+                  onChange={(e) => setForm({ ...form, code: e.target.value })}
+                  required
                 />
               </div>
-              <div>
-                <label className="text-xs font-medium">Status</label>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
                 <select
-                  className="w-full border rounded-md h-9 px-2 text-sm"
+                  id="status"
+                  className="w-full flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value })}
                 >
@@ -250,14 +360,60 @@ function DashboardCoupons() {
                   <option value="inactive">Inactive</option>
                 </select>
               </div>
-              <div className="md:col-span-2 flex justify-end gap-2 mt-2">
-                <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
-                <Button type="submit" className="bg-green-700 hover:bg-green-800">{editingId ? "Update" : "Create"}</Button>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                placeholder="e.g. Summer Sale Discount"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="discountType">Discount Type</Label>
+                <select
+                  id="discountType"
+                  className="w-full flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={form.discountType}
+                  onChange={(e) => setForm({ ...form, discountType: e.target.value })}
+                >
+                  <option value="percent">Percentage (%)</option>
+                  <option value="fixed">Fixed Amount (₹)</option>
+                </select>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+              <div className="space-y-2">
+                <Label htmlFor="discountValue">Value</Label>
+                <Input
+                  id="discountValue"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0"
+                  value={form.discountValue}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setForm({ ...form, discountValue: isNaN(val) ? "" : val });
+                  }}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                {editingId ? "Update Coupon" : "Create Coupon"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

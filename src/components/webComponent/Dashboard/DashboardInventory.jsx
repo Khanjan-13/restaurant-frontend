@@ -57,7 +57,7 @@ function DashboardInventory() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [updateMenuItem, setupdateMenuItem] = useState({});
-  
+
   // Form states for adding new inventory item
   const [newItem, setNewItem] = useState({
     name: "",
@@ -69,7 +69,7 @@ function DashboardInventory() {
     supplier: "",
     description: ""
   });
-  
+
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
@@ -97,10 +97,10 @@ function DashboardInventory() {
       if (response.data) {
         const normalized = Array.isArray(response.data)
           ? response.data.map((item) => ({
-              ...item,
-              currentStock: Number(item.currentStock ?? item.qty ?? 0),
-              costPerUnit: Number(item.costPerUnit ?? item.price ?? 0),
-            }))
+            ...item,
+            currentStock: Number(item.currentStock ?? item.qty ?? 0),
+            costPerUnit: Number(item.costPerUnit ?? item.price ?? 0),
+          }))
           : [];
         setInventoryItems(normalized);
         setFilteredItems(normalized);
@@ -394,9 +394,9 @@ function DashboardInventory() {
     const trend = Math.random() > 0.5 ? "up" : "down";
     return (
       <div className="flex items-center gap-1">
-        <FontAwesomeIcon 
-          icon={trend === "up" ? faArrowUp : faArrowDown} 
-          className={`h-3 w-3 ${trend === "up" ? "text-green-600" : "text-red-600"}`} 
+        <FontAwesomeIcon
+          icon={trend === "up" ? faArrowUp : faArrowDown}
+          className={`h-3 w-3 ${trend === "up" ? "text-green-600" : "text-red-600"}`}
         />
         <span className="text-xs text-muted-foreground">
           {trend === "up" ? "+5%" : "-3%"}
@@ -450,8 +450,8 @@ function DashboardInventory() {
                 <FontAwesomeIcon icon={faRefresh} className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <Button 
-                variant="default" 
+              <Button
+                variant="default"
                 size="sm"
                 onClick={() => setIsAddDialogOpen(true)}
               >
@@ -578,7 +578,7 @@ function DashboardInventory() {
                     return (
                       <option key={category._id || name} value={name}>
                         {name}
-                    </option>
+                      </option>
                     );
                   })}
                 </select>
@@ -595,7 +595,7 @@ function DashboardInventory() {
 
           {/* Inventory Items Table - Menu Management styled */}
           <div>
-            <div className="ml-56 pt-5">
+            <div className=" pt-5">
               <main className="mx-6 sm:mx-8">
                 <Card className="border-border shadow-lg rounded-lg overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-4">
@@ -780,222 +780,185 @@ function DashboardInventory() {
             </Dialog>
           </div>
 
-          {/* Custom GST Table */}
-          <div className="mt-6">
-            <Card className="border-border shadow-lg rounded-lg overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between pb-4">
-                <CardTitle className="flex justify-between items-center text-lg font-bold w-full">
-                  <div className="text-[#4caf50]">GST Split Reference</div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="w-full overflow-x-auto">
-                  <div className="min-w-[720px]">
-                    <Table className="text-sm">
-                      <TableHeader>
-                        <TableRow className="bg-muted/60">
-                          <TableHead className="px-4 py-3 font-semibold text-foreground uppercase tracking-wide">Context</TableHead>
-                          <TableHead className="text-right px-4 py-3 font-semibold text-foreground uppercase tracking-wide">Total GST</TableHead>
-                          <TableHead className="text-right px-4 py-3 font-semibold text-foreground uppercase tracking-wide">CGST</TableHead>
-                          <TableHead className="text-right px-4 py-3 font-semibold text-foreground uppercase tracking-wide">SGST</TableHead>
-                          <TableHead className="px-4 py-3 font-semibold text-foreground uppercase tracking-wide">Notes</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {gstRules.map((row, idx) => (
-                          <TableRow key={idx} className="even:bg-muted/20 border-b">
-                            <TableCell className="px-4 py-3 text-foreground">{row.context}</TableCell>
-                            <TableCell className="px-4 py-3 text-right text-foreground">{row.total}%</TableCell>
-                            <TableCell className="px-4 py-3 text-right text-foreground">{row.cgst}%</TableCell>
-                            <TableCell className="px-4 py-3 text-right text-foreground">{row.sgst}%</TableCell>
-                            <TableCell className="px-4 py-3 text-muted-foreground">{row.note}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+
+
+        </div>
+
+        {/* Item Details Dialog */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Item Details</DialogTitle>
+              <DialogDescription>
+                Complete information about this inventory item.
+              </DialogDescription>
+            </DialogHeader>
+            {selectedItem && (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Item Name</p>
+                  <p className="font-medium">{selectedItem.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Category</p>
+                  <p className="text-sm capitalize">{selectedItem.category}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Description</p>
+                  <p className="text-sm">{selectedItem.description || "No description"}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Current Stock</p>
+                    <p className="text-sm font-medium">{selectedItem.currentStock} {selectedItem.unit}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Min Stock Level</p>
+                    <p className="text-sm">{selectedItem.minStockLevel} {selectedItem.unit}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Cost per Unit</p>
+                    <p className="text-sm">₹{selectedItem.costPerUnit}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total Value</p>
+                    <p className="text-sm font-semibold">₹{(selectedItem.currentStock * selectedItem.costPerUnit).toFixed(2)}</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Supplier</p>
+                  <p className="text-sm">{selectedItem.supplier || "Not specified"}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Status</p>
+                  <div className="mt-1">{getStockStatusBadge(selectedItem)}</div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
-      </div>
+        {/* Add Item Dialog */}
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add Inventory Item</DialogTitle>
+              <DialogDescription>
+                Add a new item to the inventory.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleAddItem} className="space-y-4">
+              <div>
+                <Label htmlFor="name">Item Name *</Label>
+                <Input
+                  id="name"
+                  value={newItem.name}
+                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                  placeholder="Enter item name"
+                  required
+                />
+              </div>
 
-      {/* Item Details Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Item Details</DialogTitle>
-            <DialogDescription>
-              Complete information about this inventory item.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedItem && (
-            <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Item Name</p>
-                <p className="font-medium">{selectedItem.name}</p>
+                <Label htmlFor="category">Category *</Label>
+                <Input
+                  id="category"
+                  value={newItem.category}
+                  onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+                  placeholder="Enter category"
+                  required
+                />
               </div>
+
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Category</p>
-                <p className="text-sm capitalize">{selectedItem.category}</p>
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  value={newItem.description}
+                  onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                  placeholder="Enter description"
+                />
               </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Description</p>
-                <p className="text-sm">{selectedItem.description || "No description"}</p>
-              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Current Stock</p>
-                  <p className="text-sm font-medium">{selectedItem.currentStock} {selectedItem.unit}</p>
+                  <Label htmlFor="currentStock">Current Stock *</Label>
+                  <Input
+                    id="currentStock"
+                    type="number"
+                    value={newItem.currentStock}
+                    onChange={(e) => setNewItem({ ...newItem, currentStock: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    required
+                  />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Min Stock Level</p>
-                  <p className="text-sm">{selectedItem.minStockLevel} {selectedItem.unit}</p>
+                  <Label htmlFor="minStockLevel">Min Stock Level *</Label>
+                  <Input
+                    id="minStockLevel"
+                    type="number"
+                    value={newItem.minStockLevel}
+                    onChange={(e) => setNewItem({ ...newItem, minStockLevel: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="unit">Unit *</Label>
+                  <Input
+                    id="unit"
+                    value={newItem.unit}
+                    onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
+                    placeholder="kg, pcs, etc."
+                    required
+                  />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Cost per Unit</p>
-                  <p className="text-sm">₹{selectedItem.costPerUnit}</p>
+                  <Label htmlFor="costPerUnit">Cost per Unit *</Label>
+                  <Input
+                    id="costPerUnit"
+                    type="number"
+                    step="0.01"
+                    value={newItem.costPerUnit}
+                    onChange={(e) => setNewItem({ ...newItem, costPerUnit: e.target.value })}
+                    placeholder="0.00"
+                    min="0"
+                    required
+                  />
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Value</p>
-                  <p className="text-sm font-semibold">₹{(selectedItem.currentStock * selectedItem.costPerUnit).toFixed(2)}</p>
-                </div>
               </div>
+
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Supplier</p>
-                <p className="text-sm">{selectedItem.supplier || "Not specified"}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Status</p>
-                <div className="mt-1">{getStockStatusBadge(selectedItem)}</div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Item Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Inventory Item</DialogTitle>
-            <DialogDescription>
-              Add a new item to the inventory.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleAddItem} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Item Name *</Label>
-              <Input
-                id="name"
-                value={newItem.name}
-                onChange={(e) => setNewItem({...newItem, name: e.target.value})}
-                placeholder="Enter item name"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="category">Category *</Label>
-              <Input
-                id="category"
-                value={newItem.category}
-                onChange={(e) => setNewItem({...newItem, category: e.target.value})}
-                placeholder="Enter category"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                value={newItem.description}
-                onChange={(e) => setNewItem({...newItem, description: e.target.value})}
-                placeholder="Enter description"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="currentStock">Current Stock *</Label>
+                <Label htmlFor="supplier">Supplier</Label>
                 <Input
-                  id="currentStock"
-                  type="number"
-                  value={newItem.currentStock}
-                  onChange={(e) => setNewItem({...newItem, currentStock: e.target.value})}
-                  placeholder="0"
-                  min="0"
-                  required
+                  id="supplier"
+                  value={newItem.supplier}
+                  onChange={(e) => setNewItem({ ...newItem, supplier: e.target.value })}
+                  placeholder="Enter supplier name"
                 />
               </div>
-              <div>
-                <Label htmlFor="minStockLevel">Min Stock Level *</Label>
-                <Input
-                  id="minStockLevel"
-                  type="number"
-                  value={newItem.minStockLevel}
-                  onChange={(e) => setNewItem({...newItem, minStockLevel: e.target.value})}
-                  placeholder="0"
-                  min="0"
-                  required
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="unit">Unit *</Label>
-                <Input
-                  id="unit"
-                  value={newItem.unit}
-                  onChange={(e) => setNewItem({...newItem, unit: e.target.value})}
-                  placeholder="kg, pcs, etc."
-                  required
-                />
+              <div className="flex gap-2 pt-4">
+                <Button type="submit" className="flex-1">
+                  Add Item
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
               </div>
-              <div>
-                <Label htmlFor="costPerUnit">Cost per Unit *</Label>
-                <Input
-                  id="costPerUnit"
-                  type="number"
-                  step="0.01"
-                  value={newItem.costPerUnit}
-                  onChange={(e) => setNewItem({...newItem, costPerUnit: e.target.value})}
-                  placeholder="0.00"
-                  min="0"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="supplier">Supplier</Label>
-              <Input
-                id="supplier"
-                value={newItem.supplier}
-                onChange={(e) => setNewItem({...newItem, supplier: e.target.value})}
-                placeholder="Enter supplier name"
-              />
-            </div>
-
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" className="flex-1">
-                Add Item
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsAddDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

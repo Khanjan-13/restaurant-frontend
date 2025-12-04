@@ -217,8 +217,8 @@ function InventoryReport() {
                   <SelectItem value="year">This Year</SelectItem>
                 </SelectContent>
               </Select>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => {
                   setData(null);
@@ -243,14 +243,7 @@ function InventoryReport() {
                 <FontAwesomeIcon icon={faEye} className="h-4 w-4 mr-2" />
                 {loadingData ? 'Refreshing...' : 'Refresh'}
               </Button>
-              <Button variant="outline" size="sm">
-                <FontAwesomeIcon icon={faDownload} className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-              <Button variant="outline" size="sm">
-                <FontAwesomeIcon icon={faPrint} className="h-4 w-4 mr-2" />
-                Print
-              </Button>
+
             </div>
           </div>
         </div>
@@ -374,32 +367,32 @@ function InventoryReport() {
                       <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                       <XAxis dataKey="month" axisLine={false} tickLine={false} />
                       <YAxis axisLine={false} tickLine={false} />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--background))', 
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--background))',
                           border: '1px solid hsl(var(--border))',
                           borderRadius: '8px',
                           boxShadow: '0 4px 12px rgb(0 0 0 / 0.15)'
                         }}
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="totalItems" 
-                        stroke="#3B82F6" 
+                      <Line
+                        type="monotone"
+                        dataKey="totalItems"
+                        stroke="#3B82F6"
                         strokeWidth={2}
                         name="Total Items"
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="lowStock" 
-                        stroke="#F59E0B" 
+                      <Line
+                        type="monotone"
+                        dataKey="lowStock"
+                        stroke="#F59E0B"
                         strokeWidth={2}
                         name="Low Stock"
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="outOfStock" 
-                        stroke="#EF4444" 
+                      <Line
+                        type="monotone"
+                        dataKey="outOfStock"
+                        stroke="#EF4444"
                         strokeWidth={2}
                         name="Out of Stock"
                       />
@@ -461,24 +454,24 @@ function InventoryReport() {
                 ) : (
                   <div className="space-y-4">
                     {(source.topConsumedItems || []).map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-sm font-semibold text-primary">#{index + 1}</span>
+                      <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-sm font-semibold text-primary">#{index + 1}</span>
+                          </div>
+                          <div>
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">{item.category}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">{item.category}</p>
+                        <div className="text-right">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold">{item.consumed} used</p>
+                            {getTrendIcon(item.trend)}
+                          </div>
+                          <p className="text-sm text-muted-foreground">{item.remaining} remaining</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold">{item.consumed} used</p>
-                          {getTrendIcon(item.trend)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">{item.remaining} remaining</p>
-                      </div>
-                    </div>
                     ))}
                   </div>
                 )}
@@ -499,24 +492,24 @@ function InventoryReport() {
                 ) : (
                   <div className="space-y-4">
                     {(source.lowStockAlerts || []).map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
-                          <FontAwesomeIcon icon={faExclamationTriangle} className="h-4 w-4 text-red-600" />
+                      <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
+                            <FontAwesomeIcon icon={faExclamationTriangle} className="h-4 w-4 text-red-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">{item.category}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">{item.category}</p>
+                        <div className="text-right">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold">{item.currentStock}/{item.minLevel}</p>
+                            {getStatusBadge(item.daysLeft)}
+                          </div>
+                          <p className="text-sm text-muted-foreground">{item.daysLeft} days left</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold">{item.currentStock}/{item.minLevel}</p>
-                          {getStatusBadge(item.daysLeft)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">{item.daysLeft} days left</p>
-                      </div>
-                    </div>
                     ))}
                   </div>
                 )}
@@ -549,19 +542,19 @@ function InventoryReport() {
                     </TableHeader>
                     <TableBody>
                       {(source.valueAnalysis || []).map((category, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {category.category}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-semibold">₹{category.totalValue.toLocaleString()}</TableCell>
-                        <TableCell>₹{category.avgCost}</TableCell>
-                        <TableCell>{category.items}</TableCell>
-                        <TableCell className="font-semibold">
-                          ₹{Math.round(category.totalValue / category.items).toLocaleString()}
-                        </TableCell>
-                      </TableRow>
+                        <TableRow key={index}>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              {category.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-semibold">₹{category.totalValue.toLocaleString()}</TableCell>
+                          <TableCell>₹{category.avgCost}</TableCell>
+                          <TableCell>{category.items}</TableCell>
+                          <TableCell className="font-semibold">
+                            ₹{Math.round(category.totalValue / category.items).toLocaleString()}
+                          </TableCell>
+                        </TableRow>
                       ))}
                     </TableBody>
                   </Table>
@@ -584,32 +577,30 @@ function InventoryReport() {
               ) : (
                 <div className="space-y-4">
                   {(source.recentActivities || []).map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                        activity.action.includes('Added') ? 'bg-green-100' : 
-                        activity.action.includes('Used') ? 'bg-blue-100' : 'bg-yellow-100'
-                      }`}>
-                        <FontAwesomeIcon 
-                          icon={activity.action.includes('Added') ? faArrowUp : 
-                                activity.action.includes('Used') ? faArrowDown : faExclamationTriangle} 
-                          className={`h-4 w-4 ${
-                            activity.action.includes('Added') ? 'text-green-600' : 
-                            activity.action.includes('Used') ? 'text-blue-600' : 'text-yellow-600'
-                          }`} 
-                        />
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${activity.action.includes('Added') ? 'bg-green-100' :
+                            activity.action.includes('Used') ? 'bg-blue-100' : 'bg-yellow-100'
+                          }`}>
+                          <FontAwesomeIcon
+                            icon={activity.action.includes('Added') ? faArrowUp :
+                              activity.action.includes('Used') ? faArrowDown : faExclamationTriangle}
+                            className={`h-4 w-4 ${activity.action.includes('Added') ? 'text-green-600' :
+                                activity.action.includes('Used') ? 'text-blue-600' : 'text-yellow-600'
+                              }`}
+                          />
+                        </div>
+                        <div>
+                          <p className="font-medium">{activity.action}</p>
+                          <p className="text-sm text-muted-foreground">{activity.item}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">{activity.action}</p>
-                        <p className="text-sm text-muted-foreground">{activity.item}</p>
+                      <div className="text-right">
+                        <p className="font-semibold">{activity.quantity} units</p>
+                        <p className="text-sm text-muted-foreground">{activity.date}</p>
+                        <p className="text-xs text-muted-foreground">by {activity.user}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">{activity.quantity} units</p>
-                      <p className="text-sm text-muted-foreground">{activity.date}</p>
-                      <p className="text-xs text-muted-foreground">by {activity.user}</p>
-                    </div>
-                  </div>
                   ))}
                 </div>
               )}
